@@ -53,6 +53,25 @@ export class Board {
         return false;
     }
 
+    movePiece(col, row, toCol, toRow) {
+        let piece = this.#grid[col][row];
+        if(!piece) return null;
+
+        let availableMoves = this.getValidMoves(col, row);
+
+        let canBeMoved = false;
+
+        for (let i = 0; i < availableMoves.length; i++) {
+            let move = availableMoves[i];
+            if(move.col === toCol && move.row === toRow) canBeMoved = true;
+        }
+
+        if(canBeMoved) {
+            this.#grid[col][row] = null;
+            this.#grid[toCol][toRow] = piece;
+        }
+    }
+
 
     getAllColouredPieces(colour) {
         let colouredPieces = [];
@@ -88,6 +107,7 @@ export class Board {
     }
 
     placePiece(piece, col, row) {
+        if(this.#grid[col][row]) return;
         this.#grid[col][row] = piece;
     }
 
@@ -110,9 +130,10 @@ export class Board {
         return null;
     }
 
-    printGrid() {
-        console.table(this.#grid);
+    getGrid() {
+        return this.#grid;
     }
+
 
     getColumn() {
         return this.#col;
