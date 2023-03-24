@@ -1,6 +1,7 @@
 import { BlockGUI } from "./BlockGUI.js";
 
 export class BoardGUI {
+    #game;
     #board;
 
 
@@ -10,8 +11,9 @@ export class BoardGUI {
 
     #clickedPiece;
 
-    constructor(board) {
-        this.#board = board;
+    constructor(game) {
+        this.#game = game;
+        this.#board = game.getBoard();
 
         this.#element = document.getElementById("board");
 
@@ -24,7 +26,8 @@ export class BoardGUI {
 
         if(this.#clickedPiece) {
 
-            this.#board.movePiece(this.#clickedPiece.getColumn(), this.#clickedPiece.getRow(), block.getColumn(), block.getRow());
+            this.#game.movePiece(this.#clickedPiece.getColumn(), this.#clickedPiece.getRow(), block.getColumn(), block.getRow());
+
             this.#clickedPiece = null;
             this.updateBoard();
         } else {

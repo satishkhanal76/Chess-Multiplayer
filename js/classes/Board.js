@@ -7,7 +7,6 @@ export class Board {
 
     #grid;
 
-    #isOver = false;
 
     constructor() {
         this.#col = 8;
@@ -54,13 +53,7 @@ export class Board {
         return false;
     }
 
-    movePiece(col, row, toCol, toRow) {
-        let from = {
-            col, row
-        }
-        let to = {
-            col: toCol, row: toRow
-        }
+    movePiece(from, to) {
 
         let fromPiece = this.#grid[from.col][from.row];
         let toPiece = this.#grid[to.col][to.row];
@@ -71,28 +64,12 @@ export class Board {
         if(this.isValidPosition(from, to)) {
             this.#grid[from.col][from.row] = null;
             this.#grid[to.col][to.row] = fromPiece;
+            return fromPiece;
         }
 
-        this.checkForGameOver();
-
+        return null;
     }
 
-    checkForGameOver() {
-        let moves = this.getAllValidMoves(Piece.COLOUR.WHITE);
-        if(moves.length <= 0 && this.isKingBeingChecked(Piece.COLOUR.WHITE)) {
-            console.log("Black Wins")
-        }else if(moves.length <= 0) {
-            console.log("Stalemate");
-        }
-
-        moves = this.getAllValidMoves(Piece.COLOUR.BLACK);
-        if(moves.length <= 0 && this.isKingBeingChecked(Piece.COLOUR.BLACK)) {
-            console.log("White Wins");
-        }else if(moves.length <= 0) {
-            console.log("Stalemate");
-        }
-
-    }
 
     willKingBeCheckedAfterMove(from, to) {
         let fromPiece = this.#grid[from.col][from.row];

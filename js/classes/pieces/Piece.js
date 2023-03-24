@@ -49,9 +49,7 @@ export class Piece {
 
             // Knight can jump
             if(this.#type == Piece.TYPE.KNIGHT) {
-                if(pieceAtTheSpot.getColour() == this.getColour()) 
-                    spots.splice(i, 1);
-                continue;
+                return this.#validateKnightSpots(board, spots);
             };
             
             if(pieceAtTheSpot.getColour() == this.getColour()) {
@@ -60,6 +58,19 @@ export class Piece {
             
             return spots.splice(0, i + 1);
             
+        }
+        return spots;
+    }
+    
+    #validateKnightSpots(board, spots) {
+        for (let i = spots.length - 1; i >= 0; i--) {
+            let spot = spots[i];
+            let pieceAtTheSpot = board.getPiece(spot.col, spot.row);
+            
+            if(!pieceAtTheSpot) continue;
+
+            if(pieceAtTheSpot.getColour() == this.getColour()) 
+                spots.splice(i, 1);
         }
         return spots;
     }
