@@ -54,7 +54,14 @@ main {
 
 @media only screen and (max-width: 600px) {
     .board {
+        --block-width: 45px;
+        --block-height: 45px;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    .board {
         --block-width: 40px;
         --block-height: 40px;
     }
-  }
+}

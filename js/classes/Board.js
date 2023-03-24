@@ -7,6 +7,7 @@ export class Board {
 
     #grid;
 
+    #isOver = false;
 
     constructor() {
         this.#col = 8;
@@ -54,22 +55,105 @@ export class Board {
     }
 
     movePiece(col, row, toCol, toRow) {
-        let piece = this.#grid[col][row];
-        if(!piece) return null;
+        let from = {
+            col, row
+        }
+        let to = {
+            col: toCol, row: toRow
+        }
 
-        let availableMoves = this.getValidMoves(col, row);
+        let fromPiece = this.#grid[from.col][from.row];
+        let toPiece = this.#grid[to.col][to.row];
 
-        let canBeMoved = false;
+        if(!fromPiece) return null;
+        
 
+        if(this.isValidPosition(from, to)) {
+            this.#grid[from.col][from.row] = null;
+            this.#grid[to.col][to.row] = fromPiece;
+        }
+
+        this.checkForGameOver();
+
+    }
+
+    checkForGameOver() {
+        let moves = this.getAllValidMoves(Piece.COLOUR.WHITE);
+        if(moves.length <= 0 && this.isKingBeingChecked(Piece.COLOUR.WHITE)) {
+            console.log("Black Wins")
+        }else if(moves.length <= 0) {
+            console.log("Stalemate");
+        }
+
+        moves = this.getAllValidMoves(Piece.COLOUR.BLACK);
+        if(moves.length <= 0 && this.isKingBeingChecked(Piece.COLOUR.BLACK)) {
+            console.log("White Wins");
+        }else if(moves.length <= 0) {
+            console.log("Stalemate");
+        }
+
+    }
+
+    willKingBeCheckedAfterMove(from, to) {
+        let fromPiece = this.#grid[from.col][from.row];
+        let toPiece = this.#grid[to.col][to.row];
+        let willBe = false;
+
+        if(!fromPiece) return true;
+        
+
+        //move the piece
+        this.#grid[from.col][from.row] = null;
+        this.#grid[to.col][to.row] = fromPiece;
+        
+
+        if(this.isKingBeingChecked(fromPiece.getColour())) {
+            willBe = true;;
+        }
+        
+        this.#grid[from.col][from.row] = fromPiece;
+        this.#grid[to.col][to.row] = toPiece;
+        return willBe;
+    }
+
+    
+
+    isValidPosition(from, to) {
+        let isAvalidPosition = false;
+
+        let availableMoves = this.getValidMoves(from.col, from.row);
         for (let i = 0; i < availableMoves.length; i++) {
             let move = availableMoves[i];
-            if(move.col === toCol && move.row === toRow) canBeMoved = true;
+            if(move.col === to.col && move.row === to.row) isAvalidPosition = true;
+        }
+        return isAvalidPosition;
+    }
+
+    isKingBeingChecked(colour) {
+        let checksTheKing = false;
+        if(colour === Piece.COLOUR.WHITE) {
+            checksTheKing = this.isCheckingTheKing(Piece.COLOUR.BLACK);
+        }else {
+            checksTheKing = this.isCheckingTheKing(Piece.COLOUR.WHITE);
         }
 
-        if(canBeMoved) {
-            this.#grid[col][row] = null;
-            this.#grid[toCol][toRow] = piece;
+        return checksTheKing;
+    }
+
+    getAllValidMoves(colour) {
+        let piece, validMoves = [];
+        for (let i = 0; i < this.#grid.length; i++) {
+            for (let j = 0; j < this.#grid[i].length; j++) {
+                piece = this.#grid[i][j];
+
+                if(!piece) continue;
+
+                if(piece.getColour() === colour) {
+                    validMoves = validMoves.concat(this.getValidMoves(i, j));
+                }
+            }
         }
+        return validMoves;
     }
 
 
@@ -88,21 +172,35 @@ export class Board {
     }
 
     getValidMoves(col, row) {
+        let from, to;
+        from = {
+            col, row
+        };
+
         let availableMoves;
         let piece = this.#grid[col][row];
         if(!piece) return [];
 
         availableMoves = piece.getAvailableMoves(this);
 
-        for(let i = 0; i < availableMoves.length; i++) {
-            let pieceAtTheSpot = this.getPiece(availableMoves[i].col, availableMoves[i].row);
-            if(!pieceAtTheSpot) continue;
-
-            if(pieceAtTheSpot.getType() === Piece.TYPE.KING) {
-                availableMoves.splice(i, 0);
+        for(let i = availableMoves.length - 1; i >= 0; i--) {
+            to = {
+                col: availableMoves[i].col,
+                row: availableMoves[i].row
+            }
+            
+            let pieceAtTheSpot = this.getPiece(to.col, to.row);
+            if(pieceAtTheSpot && pieceAtTheSpot.getType() === Piece.TYPE.KING) {
+                availableMoves.splice(i, 1);
+                continue;
             };
-        };
+            
+            //if this move puts king at risk than its not valid
+            if(this.willKingBeCheckedAfterMove(from, to)) {
+                availableMoves.splice(i, 1);
+            }
 
+        };
         return availableMoves;
     }
 
