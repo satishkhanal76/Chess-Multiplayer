@@ -25,6 +25,7 @@ main {
     --block-height: 50px;
 
     --num-of-columns: 8;
+    font-size: 1.2rem;
 
     display: grid;
     grid-template-columns: repeat(var(--num-of-columns), auto);
@@ -40,7 +41,7 @@ main {
 
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 2em;
     cursor: pointer;
 
 
@@ -50,3 +51,10 @@ main {
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
 }
+
+@media only screen and (max-width: 600px) {
+    .board {
+        --block-width: 40px;
+        --block-height: 40px;
+    }
+  }
