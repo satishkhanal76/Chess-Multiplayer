@@ -8,10 +8,6 @@ export class Knight extends Piece {
     }
 
     configureMoves() {
-        if(this.getColour() === Piece.COLOUR.WHITE) {
-            this.addMoves(Movement.getForwardToTop);
-        }else {
-            this.addMoves(Movement.getForwardToBottom);
-        }
+        this.addMoves(Movement.getKnightMovement);
     }
 }

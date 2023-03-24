@@ -44,14 +44,22 @@ export class Piece {
         for(let i = 0; i < spots.length; i++) {
             let spot = spots[i];
             let pieceAtTheSpot = board.getPiece(spot.col, spot.row);
-
+            
             if(!pieceAtTheSpot) continue;
 
+            // Knight can jump
+            if(this.#type == Piece.TYPE.KNIGHT) {
+                if(pieceAtTheSpot.getColour() == this.getColour()) 
+                    spots.splice(i, 1);
+                continue;
+            };
+            
             if(pieceAtTheSpot.getColour() == this.getColour()) {
                 return spots.splice(0, i);
             }
             
             return spots.splice(0, i + 1);
+            
         }
         return spots;
     }

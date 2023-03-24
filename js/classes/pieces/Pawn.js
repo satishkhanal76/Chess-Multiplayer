@@ -33,12 +33,15 @@ export class Pawn extends Piece {
             moves = moves.concat(Movement.getOneDiagnolToBottomRight(board, piecePosition.col, piecePosition.row));
         }
         
-        moves.forEach(move => {
+        for (let i = 0; i < moves.length; i++) {
+            let move = moves[i];
+            if(!move) continue;
+            
             let piece = board.getPiece(move.col, move.row);
             if(piece && (piece.getColour() != this.getColour())) {
                 availableMoves.push(move);
             }
-        })
+        }
 
         return availableMoves;
 

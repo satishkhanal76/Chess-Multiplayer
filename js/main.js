@@ -9,15 +9,34 @@ let board = new Board();
 
 let boardGUI = new BoardGUI(board);
 
-let blackPawn = PieceFactory.getPiece("pawn", Piece.COLOUR.BLACK);
-let whiteKing = PieceFactory.getPiece("king", Piece.COLOUR.WHITE);
-let whiteQueen = PieceFactory.getPiece("queen", Piece.COLOUR.WHITE);
 
 
-board.placePiece(blackPawn, 4, 6);
-board.placePiece(whiteKing, 4, 7);
-board.placePiece(whiteQueen, 5, 7);
+let fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+let lines = fenString.split("/");
+
+console.log(lines);
+
+for (let i = 0; i < lines.length; i++) {
+    let piece, character;
+    let line = lines[i];
+
+    if(line.length == 1) continue;
+
+    for (let j = 0; j < line.length; j++) {
+        character = line.charAt(j);
+        piece = PieceFactory.getPieceFen(character);
+        board.placePiece(piece, j, i);
+        
+    }
+
+}
+
 
 boardGUI.showBoardOnConsole();
 
 boardGUI.updateBoard();
+
+/**
+ * "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+ */

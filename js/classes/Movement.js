@@ -269,4 +269,47 @@ export class Movement {
 
         return spots;
     }
+
+    /**
+     * Knight Unique movements
+     */
+
+    static getKnightMovement(board, col, row) {
+        let spots = [];
+        let spot;
+        let spotCol = col;
+        let spotRow = row;
+        
+        for (let i = -1; i <= 1; i++) {
+            for(let j = -1; j <= 1; j++) {
+                if(i == 0 || j == 0) continue;
+                spotCol = col + (2 * i);
+                spotRow = row + (1 * j);
+                if(!(spotCol < 0 || spotCol >= board.getColumn() || spotRow < 0 || spotRow >= board.getRow())) {
+                    spot = {
+                        col: spotCol,
+                        row: spotRow
+                    };
+                    spots.push(spot);
+                }
+            }
+        }
+
+        for (let i = -1; i <= 1; i++) {
+            for(let j = -1; j <= 1; j++) {
+                if(i == 0 || j == 0) continue;
+                spotCol = col + (1 * i);
+                spotRow = row + (2 * j);
+                if(!(spotCol < 0 || spotCol >= board.getColumn() || spotRow < 0 || spotRow >= board.getRow())) {
+                    spot = {
+                        col: spotCol,
+                        row: spotRow
+                    };
+                    spots.push(spot);
+                }
+            }
+        }
+
+        return spots;
+    }
 }
