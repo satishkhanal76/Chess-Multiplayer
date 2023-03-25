@@ -59,7 +59,6 @@ export class Pawn extends Piece {
         }
 
         return availableMoves;
-
     }
 
     moved(from, to) {
