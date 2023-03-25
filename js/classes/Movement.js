@@ -124,6 +124,38 @@ export class Movement {
         return spots;
     }
 
+    static getTwoForwardToTop(board, col, row) {
+        let spots = [];
+        let spot = Movement.getForwardToTop(board, col, row);
+        let moves = 1;
+
+        while(spot && moves <= 2) {
+            spots = spots.concat(spot);
+            col = spot[0].col;
+            row = spot[0].row;
+            spot = Movement.getForwardToTop(board, col, row);
+            moves = moves + 1;
+        }
+
+        return spots;
+    }
+
+    static getTwoForwardToBottom(board, col, row) {
+        let spots = [];
+        let spot = Movement.getForwardToBottom(board, col, row);
+        let moves = 1;
+
+        while(spot && moves <= 2) {
+            spots = spots.concat(spot);
+            col = spot[0].col;
+            row = spot[0].row;
+            spot = Movement.getForwardToBottom(board, col, row);
+            moves = moves + 1;
+        }
+
+        return spots;
+    }
+
 
     /**
      * Diagnol movements

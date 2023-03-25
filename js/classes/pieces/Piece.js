@@ -77,13 +77,21 @@ export class Piece {
 
     /**
      * This method is called whenever a piece is moved
+
+     * @param {Object} from the position the piece moved from
+     * @param {Object} to the position the piece moved to
+     * @returns 
      */
-    moved(board) {
+    moved(from, to) {
         return null;
     }
 
     addMoves(move) {
         this.#moves.push(move);
+    }
+
+    clearMoves() {
+        this.#moves = [];
     }
 
     getType() {

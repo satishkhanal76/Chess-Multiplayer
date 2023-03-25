@@ -64,6 +64,7 @@ export class Board {
         if(this.isValidPosition(from, to)) {
             this.#grid[from.col][from.row] = null;
             this.#grid[to.col][to.row] = fromPiece;
+            fromPiece.moved(from, to);
             return fromPiece;
         }
 

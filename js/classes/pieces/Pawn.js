@@ -12,13 +12,23 @@ export class Pawn extends Piece {
 
     configureMoves() {
         if(this.getColour() === Piece.COLOUR.WHITE) {
-            this.addMoves(Movement.getForwardToTop);
+            this.addMoves(Movement.getTwoForwardToTop);
         }else {
-            this.addMoves(Movement.getForwardToBottom);
+            this.addMoves(Movement.getTwoForwardToBottom);
         }
     }
 
     getAvailableMoves(board) {
+        //if not moved allow 2 positions
+        if(this.#moved) {
+            this.clearMoves();
+            if(this.getColour() === Piece.COLOUR.WHITE) {
+                this.addMoves(Movement.getForwardToTop);
+            }else {
+                this.addMoves(Movement.getForwardToBottom);
+            }
+        }
+
         let availableMoves = super.getAvailableMoves(board);
 
         //if there is an opponent's piece at front then it's an invalid position
@@ -28,11 +38,7 @@ export class Pawn extends Piece {
         let piecePosition = board.getPiecePosition(this);
         let moves = [];
 
-        //if not moved allow 2 positions
-        if(!this.#moved) {
-            
-        }
-
+        
 
         if(this.getColour() === Piece.COLOUR.WHITE) {
             moves = moves.concat(Movement.getOneDiagnolToTopLeft(board, piecePosition.col, piecePosition.row));
@@ -56,10 +62,7 @@ export class Pawn extends Piece {
 
     }
 
-    /**
-     * This method is called whenever a piece is moved
-     */
-    moved(board) {
+    moved(from, to) {
         this.#moved = true;
     }
 
