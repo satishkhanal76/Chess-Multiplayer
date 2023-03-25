@@ -1,3 +1,4 @@
+import { Piece } from "../classes/pieces/Piece.js";
 import { BlockGUI } from "./BlockGUI.js";
 
 export class BoardGUI {
@@ -11,14 +12,19 @@ export class BoardGUI {
 
     #clickedPiece;
 
-    constructor(game) {
+    #modal;
+
+    constructor(game, modal) {
         this.#game = game;
         this.#board = game.getBoard();
+
+        this.#modal = modal;
 
         this.#element = document.getElementById("board");
 
 
         this.#createBlocks();
+        this.updateBoard();
     }
 
     clicked(block) {
@@ -30,6 +36,7 @@ export class BoardGUI {
 
             this.#clickedPiece = null;
             this.updateBoard();
+            this.displayModalIfOver();
         } else {
 
             if(!piece) return null;
@@ -40,6 +47,46 @@ export class BoardGUI {
             this.showValidMoves(validMoves);
         }
     }
+
+    /**
+     * This method is a mess- need to refactor later
+     * @returns 
+     */
+    displayModalIfOver() {
+        let isGameOver = this.#game.isOver();
+
+        if(!isGameOver) return null;
+
+        this.#modal.style.display = "block";
+
+        let text = this.#modal.querySelector(".modal-title");
+        let display = this.#modal.querySelector(".display");
+
+        let avatar = document.createElement("div");
+        avatar.classList.add("avatar");
+        let avatar2 = document.createElement("div");
+        avatar2.classList.add("avatar");
+
+        let winner = this.#game.getWinner();
+        let winnerCharacter = (winner?.getColour() === Piece.COLOUR.WHITE) ? "♔": "♚";
+
+        if(winner) {
+            text.textContent = `${(winner?.getColour() === Piece.COLOUR.WHITE) ? "White": "Black"} wins!`;
+            console.log(winner)
+            display.classList.add("win");
+            avatar.classList.add(`win-${(winner?.getColour() === Piece.COLOUR.WHITE) ? "white": "black"}`);
+            avatar.textContent = winnerCharacter;
+            display.appendChild(avatar);
+        } else {
+            text.textContent = `Stalemate!`;
+            display.classList.add("stalemate");
+            avatar.textContent = "♔";
+            avatar2.textContent = "♚"
+            display.appendChild(avatar);
+            display.appendChild(avatar2);
+        }
+    }
+
 
     showValidMoves(validMoves) {
         validMoves.forEach(move => {

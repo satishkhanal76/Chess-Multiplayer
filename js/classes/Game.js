@@ -22,6 +22,12 @@ export class Game {
 
         this.createBoard();
 
+        this.resetGame();
+    }
+
+    resetGame() {
+        this.#isOver = false;
+        this.#winner = null;
     }
 
     createBoard() {
@@ -89,10 +95,11 @@ export class Game {
         let moves = this.#board.getAllValidMoves(this.#currentTurn.getColour());
 
         if(moves.length <= 0 && this.#board.isKingBeingChecked(this.#currentTurn.getColour())) {
-            this.#winner = this.#currentTurn;
-            console.log(`${this.getNextTurn().getColour()} wins!`);
+            this.#winner = this.getNextTurn();
+            this.#isOver = true;
         }else if(moves.length <= 0) {
-            console.log("Stalemate");
+            this.#winner = null;
+            this.#isOver = true;
         }
     }
 
@@ -108,6 +115,14 @@ export class Game {
 
     getBoard() {
         return this.#board;
+    }
+
+    getWinner() {
+        return this.#winner;
+    }
+
+    isOver() {
+        return this.#isOver;
     }
 
 }

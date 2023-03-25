@@ -3,7 +3,6 @@
     padding: 0;
 }
 
-
 .valid-spot {
     background-color: red;
 }
@@ -52,6 +51,85 @@ main {
     user-select: none; /* Standard */
 }
 
+.modal-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+    color: white;
+
+    pointer-events: none;
+}
+
+.modal-container .modal {
+    background-color: black;
+    padding: 2rem;
+    border-radius: 0.5rem;
+
+    font-size: 2.5rem;
+    pointer-events: all;
+
+    display: none;
+}
+
+.modal h5 {
+    text-align: center;
+}
+
+.modal .display {
+    text-align: center;
+    position: relative;
+
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+
+.modal .display.win {
+    font-size: 5em;
+}
+
+.modal .display.win .avatar {
+    background-color: rgb(4, 163, 4);
+    width: 15rem;
+    height: 15rem;
+    border-radius: 50%;
+}
+
+.modal .display.stalemate {
+    font-size: 3em;
+}
+
+.modal .display.stalemate .avatar {
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+}
+
+.modal .display.stalemate :nth-child(1){
+    transform: rotate(-45deg);
+}
+
+.modal .display.stalemate :nth-child(2){
+    transform: rotate(45deg);
+}
+
+.avatar.win-black {
+    color: black;
+}
+
+.avatar.win-white {
+    color: white;
+}
+
+
+
 @media only screen and (max-width: 600px) {
     .board {
         --block-width: 45px;
@@ -63,5 +141,12 @@ main {
     .board {
         --block-width: 40px;
         --block-height: 40px;
+    }
+}
+
+
+@media only screen and (max-width: 350px) {
+    .modal .display.stalemate {
+        font-size: 2em;
     }
 }
