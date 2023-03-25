@@ -75,6 +75,13 @@ export class Piece {
         return spots;
     }
 
+    /**
+     * This method is called whenever a piece is moved
+     */
+    moved(board) {
+        return null;
+    }
+
     addMoves(move) {
         this.#moves.push(move);
     }

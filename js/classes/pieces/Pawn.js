@@ -2,8 +2,11 @@ import { Movement } from "../Movement.js";
 import { Piece } from "./Piece.js";
 
 export class Pawn extends Piece {
+    #moved;
     constructor(character, colour) {
         super(Piece.TYPE.PAWN, character, colour);
+        this.#moved = false;
+
         this.configureMoves();
     }
 
@@ -24,6 +27,12 @@ export class Pawn extends Piece {
         //if there is an opponent's piece on the diagonal then its a valid move
         let piecePosition = board.getPiecePosition(this);
         let moves = [];
+
+        //if not moved allow 2 positions
+        if(!this.#moved) {
+            
+        }
+
 
         if(this.getColour() === Piece.COLOUR.WHITE) {
             moves = moves.concat(Movement.getOneDiagnolToTopLeft(board, piecePosition.col, piecePosition.row));
@@ -47,6 +56,12 @@ export class Pawn extends Piece {
 
     }
 
+    /**
+     * This method is called whenever a piece is moved
+     */
+    moved(board) {
+        this.#moved = true;
+    }
 
     validateTheMove(board, availableMoves) {
         for (let i = 0; i < availableMoves.length; i++) {
