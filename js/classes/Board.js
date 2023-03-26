@@ -72,9 +72,7 @@ export class Board {
         return null;
     }
 
-    castle(kingPos, rookPos) {
-        let king = this.getPiece(kingPos.col, kingPos.row);
-        let rook = this.getPiece(rookPos.col, rookPos.row);
+    canBeCastled(king, rook) {
         if(king?.getType() !== Piece.TYPE.KING || rook?.getType() !== Piece.TYPE.ROOK) return null;
 
         if(king.hasMoved() || rook.hasMoved()) return null;
@@ -94,6 +92,15 @@ export class Board {
             }
         })
         if(spotUnderAttack) return null;
+        return kingOnPath;
+    }
+
+    castle(kingPos, rookPos) {
+        let king = this.getPiece(kingPos.col, kingPos.row);
+        let rook = this.getPiece(rookPos.col, rookPos.row);
+        
+        let kingOnPath = this.canBeCastled(king, rook);
+        if(!kingOnPath) return null;
         
         
         //castling can be done
@@ -109,7 +116,6 @@ export class Board {
         rook.moved(rookPos, rookNewPos);
 
         return true;
-        
     }
 
     willKingBeCheckedAfterMove(from, to) {
@@ -133,7 +139,6 @@ export class Board {
         this.#grid[to.col][to.row] = toPiece;
         return willBe;
     }
-
     
 
     isValidPosition(from, to) {
