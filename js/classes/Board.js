@@ -54,12 +54,13 @@ export class Board {
     }
 
     movePiece(from, to) {
-
         let fromPiece = this.#grid[from.col][from.row];
         let toPiece = this.#grid[to.col][to.row];
-
+        
         if(!fromPiece) return null;
         
+        //castle if possible
+        if(this.castle(from, to)) return fromPiece;
 
         if(this.isValidPosition(from, to)) {
             this.#grid[from.col][from.row] = null;
@@ -67,10 +68,47 @@ export class Board {
             fromPiece.moved(from, to);
             return fromPiece;
         }
-
+        
         return null;
     }
 
+    castle(kingPos, rookPos) {
+        let king = this.getPiece(kingPos.col, kingPos.row);
+        let rook = this.getPiece(rookPos.col, rookPos.row);
+        if(king?.getType() !== Piece.TYPE.KING || rook?.getType() !== Piece.TYPE.ROOK) return null;
+
+        if(king.hasMoved() || rook.hasMoved()) return null;
+        if(this.isKingBeingChecked(king.getColour())) return null;
+
+        let kingOnPath = rook.isKingOnPath(this);
+
+        if(!kingOnPath) return null;
+        let enemyColour = (king.getColour() === Piece.COLOUR.WHITE) ? Piece.COLOUR.BLACK: Piece.COLOUR.WHITE;
+
+        let allValidEnemyMoves = this.getAllValidMoves(enemyColour);
+        let spotUnderAttack = false;
+        kingOnPath.forEach(spot => {
+            let onSpot = allValidEnemyMoves.filter(move => spot.col == move.col && spot.row == move.row);
+            if(onSpot.length >= 1) {
+                spotUnderAttack = true;
+            }
+        })
+        if(spotUnderAttack) return null;
+        
+        
+        //castling can be done
+        let kingNewPos = kingOnPath.length - 2;
+        let rookNewPos = kingNewPos + 1;
+
+        this.#grid[kingPos.col][kingPos.row] = null;
+        this.#grid[rookPos.col][rookPos.row] = null;
+
+        this.#grid[kingOnPath[kingNewPos].col][kingOnPath[kingNewPos].row] = king;
+        this.#grid[kingOnPath[rookNewPos].col][kingOnPath[rookNewPos].row] = rook;
+
+        return true;
+        
+    }
 
     willKingBeCheckedAfterMove(from, to) {
         let fromPiece = this.#grid[from.col][from.row];

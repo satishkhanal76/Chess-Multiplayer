@@ -2,10 +2,8 @@ import { Movement } from "../Movement.js";
 import { Piece } from "./Piece.js";
 
 export class Pawn extends Piece {
-    #moved;
     constructor(character, colour) {
         super(Piece.TYPE.PAWN, character, colour);
-        this.#moved = false;
 
         this.configureMoves();
     }
@@ -20,7 +18,7 @@ export class Pawn extends Piece {
 
     getAvailableMoves(board) {
         //if not moved allow 2 positions
-        if(this.#moved) {
+        if(this.hasMoved()) {
             this.clearMoves();
             if(this.getColour() === Piece.COLOUR.WHITE) {
                 this.addMoves(Movement.getForwardToTop);
@@ -59,10 +57,6 @@ export class Pawn extends Piece {
         }
 
         return availableMoves;
-    }
-
-    moved(from, to) {
-        this.#moved = true;
     }
 
     validateTheMove(board, availableMoves) {

@@ -18,14 +18,19 @@ export class Piece {
     #character;
     #colour;
     #moves;
+
+    #moved;
     
     constructor(type, character, colour) {
         this.#type = type;
         this.#character = character;
         this.#colour = colour;
         this.#moves = [];
+
+        this.#moved = false;
     }
 
+    
 
     getAvailableMoves(board) {
         let piecePosition = board.getPiecePosition(this);
@@ -83,13 +88,20 @@ export class Piece {
      * @returns 
      */
     moved(from, to) {
-        return null;
+        this.#moved = true;
+    }
+
+    hasMoved() {
+        return this.#moved;
     }
 
     addMoves(move) {
         this.#moves.push(move);
     }
 
+    getMoves() {
+        return this.#moves;
+    }
     clearMoves() {
         this.#moves = [];
     }

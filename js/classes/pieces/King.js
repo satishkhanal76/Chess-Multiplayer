@@ -2,10 +2,10 @@ import { Movement } from "../Movement.js";
 import { Piece } from "./Piece.js";
 
 export class King extends Piece {
-
     constructor(character, colour) {
         super(Piece.TYPE.KING, character, colour);
         this.configureMoves();
+
     }
 
     configureMoves() {
@@ -19,5 +19,4 @@ export class King extends Piece {
         this.addMoves(Movement.getOneDiagnolToBottomRight);
     }
 
-    
 }
