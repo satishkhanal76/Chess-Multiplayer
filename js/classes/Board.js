@@ -105,6 +105,8 @@ export class Board {
 
         this.#grid[kingOnPath[kingNewPos].col][kingOnPath[kingNewPos].row] = king;
         this.#grid[kingOnPath[rookNewPos].col][kingOnPath[rookNewPos].row] = rook;
+        king.moved(kingPos, kingNewPos);
+        rook.moved(rookPos, rookNewPos);
 
         return true;
         
