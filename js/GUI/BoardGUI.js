@@ -75,7 +75,7 @@ export class BoardGUI {
             let fromPiece = this.#board.getPiece(from);
             let toPiece = this.#board.getPiece(to);
 
-            if(fromPiece.getType() === Piece.TYPE.KING && toPiece.getType() === Piece.TYPE.ROOK) {
+            if(fromPiece?.getType() === Piece.TYPE.KING && toPiece?.getType() === Piece.TYPE.ROOK) {
                 command = new CastleCommand(from, to);
                 
             } else {
