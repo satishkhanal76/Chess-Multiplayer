@@ -50,7 +50,7 @@ export class Pawn extends Piece {
             let move = moves[i];
             if(!move) continue;
             
-            let piece = board.getPiece(move.col, move.row);
+            let piece = board.getPiece(move);
             if(piece && (piece.getColour() != this.getColour())) {
                 availableMoves.push(move);
             }
@@ -62,7 +62,7 @@ export class Pawn extends Piece {
     validateTheMove(board, availableMoves) {
         for (let i = 0; i < availableMoves.length; i++) {
             let move = availableMoves[i];
-            let piece = board.getPiece(move.col, move.row);
+            let piece = board.getPiece(move);
             if(piece && (piece.getColour() != this.getColour())) {
                 availableMoves.splice(i, 1);
             }

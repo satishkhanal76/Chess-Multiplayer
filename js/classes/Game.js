@@ -48,7 +48,7 @@ export class Game {
             for (let j = 0; j < line.length; j++) {
                 character = line.charAt(j);
                 piece = PieceFactory.getPieceFen(character);
-                this.#board.placePiece(piece, j, i);
+                this.#board.placePiece(piece, {col: j, row: i});
             }
 
         }

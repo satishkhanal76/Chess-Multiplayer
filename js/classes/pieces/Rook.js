@@ -14,7 +14,7 @@ export class Rook extends Piece {
         super.addMoves(Movement.getHorizontalToRight);
     }
 
-    isKingOnPath(board) {
+    pathToKing(board) {
         let piecePosition = board.getPiecePosition(this);
         let kingExistsObj = {};
 
@@ -35,7 +35,7 @@ export class Rook extends Piece {
 
         for(let i = 0; i < spots.length; i++) {
             let spot = spots[i];
-            let pieceAtTheSpot = board.getPiece(spot.col, spot.row);
+            let pieceAtTheSpot = board.getPiece(spot);
             
             if(!pieceAtTheSpot) continue;
             if(pieceAtTheSpot.getColour() !== this.getColour()) {

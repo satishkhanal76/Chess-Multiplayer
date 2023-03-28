@@ -1,3 +1,4 @@
+import { CommandHandler } from "./commands/CommandHandler.js";
 import { Piece } from "./pieces/Piece.js";
 
 export class Board {
@@ -7,12 +8,16 @@ export class Board {
 
     #grid;
 
+    #commandHandler;
+
 
     constructor() {
         this.#col = 8;
         this.#row = 8;
 
         this.#createBoard();
+
+        this.#commandHandler = new CommandHandler(this);
     }
 
     #createBoard() {
@@ -42,7 +47,7 @@ export class Board {
         let availableMoves = piece.getAvailableMoves(this);
 
         for(let i = 0; i < availableMoves.length; i++) {
-            let pieceAtTheSpot = this.getPiece(availableMoves[i].col, availableMoves[i].row);
+            let pieceAtTheSpot = this.getPiece(availableMoves[i]);
             if(!pieceAtTheSpot) continue;
 
             if(pieceAtTheSpot.getType() === Piece.TYPE.KING) {
@@ -53,32 +58,13 @@ export class Board {
         return false;
     }
 
-    movePiece(from, to) {
-        let fromPiece = this.#grid[from.col][from.row];
-        let toPiece = this.#grid[to.col][to.row];
-        
-        if(!fromPiece) return null;
-        
-        //castle if possible
-        if(this.castle(from, to)) return fromPiece;
-
-        if(this.isValidPosition(from, to)) {
-            this.#grid[from.col][from.row] = null;
-            this.#grid[to.col][to.row] = fromPiece;
-            fromPiece.moved(from, to);
-            return fromPiece;
-        }
-        
-        return null;
-    }
-
     canBeCastled(king, rook) {
         if(king?.getType() !== Piece.TYPE.KING || rook?.getType() !== Piece.TYPE.ROOK) return null;
 
         if(king.hasMoved() || rook.hasMoved()) return null;
         if(this.isKingBeingChecked(king.getColour())) return null;
 
-        let kingOnPath = rook.isKingOnPath(this);
+        let kingOnPath = rook.pathToKing(this);
 
         if(!kingOnPath) return null;
         let enemyColour = (king.getColour() === Piece.COLOUR.WHITE) ? Piece.COLOUR.BLACK: Piece.COLOUR.WHITE;
@@ -96,8 +82,8 @@ export class Board {
     }
 
     castle(kingPos, rookPos) {
-        let king = this.getPiece(kingPos.col, kingPos.row);
-        let rook = this.getPiece(rookPos.col, rookPos.row);
+        let king = this.getPiece(kingPos);
+        let rook = this.getPiece(rookPos);
         
         let kingOnPath = this.canBeCastled(king, rook);
         if(!kingOnPath) return null;
@@ -172,7 +158,7 @@ export class Board {
                 if(!piece) continue;
 
                 if(piece.getColour() === colour) {
-                    validMoves = validMoves.concat(this.getValidMoves(i, j));
+                    validMoves = validMoves.concat(piece.getValidMoves(this));
                 }
             }
         }
@@ -194,52 +180,19 @@ export class Board {
         return colouredPieces;
     }
 
-    getValidMoves(col, row) {
-        let from, to;
-        from = {
-            col, row
-        };
-
-        let availableMoves;
-        let piece = this.#grid[col][row];
-        if(!piece) return [];
-
-        availableMoves = piece.getAvailableMoves(this);
-
-        for(let i = availableMoves.length - 1; i >= 0; i--) {
-            to = {
-                col: availableMoves[i].col,
-                row: availableMoves[i].row
-            }
-            
-            let pieceAtTheSpot = this.getPiece(to.col, to.row);
-            if(pieceAtTheSpot && pieceAtTheSpot.getType() === Piece.TYPE.KING) {
-                availableMoves.splice(i, 1);
-                continue;
-            };
-            
-            //if this move puts king at risk than its not valid
-            if(this.willKingBeCheckedAfterMove(from, to)) {
-                availableMoves.splice(i, 1);
-            }
-
-        };
-        return availableMoves;
+    placePiece(piece, at) {
+        if(this.#grid[at.col][at.row]) return;
+        this.#grid[at.col][at.row] = piece;
     }
 
-    placePiece(piece, col, row) {
-        if(this.#grid[col][row]) return;
-        this.#grid[col][row] = piece;
-    }
-
-    removePiece(col, row) {
-        let piece = this.#grid[col][row];
-        this.#grid[col][row] = null;
+    removePiece(from) {
+        let piece = this.#grid[from.col][from.row];
+        this.#grid[from.col][from.row] = null;
         return piece;
     }
 
-    getPiece(col, row) {
-        return this.#grid[col][row];
+    getPiece(at) {
+        return this.#grid[at.col][at.row];
     }
 
     getPiecePosition(piece) {
@@ -249,6 +202,10 @@ export class Board {
             }
         }
         return null;
+    }
+
+    getCommandHandler() {
+        return this.#commandHandler;
     }
 
     getGrid() {

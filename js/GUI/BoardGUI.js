@@ -1,5 +1,8 @@
+import { CastleCommand } from "../classes/commands/CastleCommand.js";
 import { Piece } from "../classes/pieces/Piece.js";
 import { BlockGUI } from "./BlockGUI.js";
+import { MoveCommand } from "../classes/commands/MoveCommand.js";
+
 
 export class BoardGUI {
     #game;
@@ -25,14 +28,65 @@ export class BoardGUI {
 
         this.#createBlocks();
         this.updateBoard();
+
+        this.setupButtons();
+    }
+
+    setupButtons() {
+        let prev = document.getElementById("previous");
+        let next = document.getElementById("next");
+        let current = document.getElementById("current");
+
+        prev.addEventListener("click", () => {
+            this.#board.getCommandHandler().undoCommand();
+            this.updateBoard();
+        })
+
+        
+        next.addEventListener("click", () => {
+            this.#board.getCommandHandler().redoCommand();
+            this.updateBoard();
+        })
+
+        current.addEventListener("click", () => {
+            this.#board.getCommandHandler().executeCommands();
+            this.updateBoard();
+        })
     }
 
     clicked(block) {
-        let piece = this.#board.getPiece(block.getColumn(), block.getRow());
+        let commadHandler = this.#board.getCommandHandler();
+        let from, to, command;
+
+        to = {
+            col: block.getColumn(),
+            row: block.getRow()
+        }
+
+        let piece = this.#board.getPiece(to);
 
         if(this.#clickedPiece) {
+            
+            from = {
+                col: this.#clickedPiece.getColumn(),
+                row: this.#clickedPiece.getRow()
+            }
 
-            this.#game.movePiece(this.#clickedPiece.getColumn(), this.#clickedPiece.getRow(), block.getColumn(), block.getRow());
+            let fromPiece = this.#board.getPiece(from);
+            let toPiece = this.#board.getPiece(to);
+
+            if(fromPiece.getType() === Piece.TYPE.KING && toPiece.getType() === Piece.TYPE.ROOK) {
+                command = new CastleCommand(from, to);
+                
+            } else {
+                command = new MoveCommand(from, to);
+            }
+            
+            commadHandler.addCommand(command);
+            commadHandler.executeNextCommand();
+            
+
+
 
             this.#clickedPiece = null;
             this.updateBoard();
@@ -43,7 +97,7 @@ export class BoardGUI {
             
             this.#clickedPiece = block;
     
-            let validMoves = this.#board.getValidMoves(block.getColumn(), block.getRow());
+            let validMoves = piece.getValidMoves(this.#board);
             this.showValidMoves(validMoves);
         }
     }

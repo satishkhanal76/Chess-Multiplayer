@@ -48,7 +48,7 @@ export class Piece {
     checkPathForValidSpots(board, spots) {
         for(let i = 0; i < spots.length; i++) {
             let spot = spots[i];
-            let pieceAtTheSpot = board.getPiece(spot.col, spot.row);
+            let pieceAtTheSpot = board.getPiece(spot);
             
             if(!pieceAtTheSpot) continue;
 
@@ -70,7 +70,7 @@ export class Piece {
     #validateKnightSpots(board, spots) {
         for (let i = spots.length - 1; i >= 0; i--) {
             let spot = spots[i];
-            let pieceAtTheSpot = board.getPiece(spot.col, spot.row);
+            let pieceAtTheSpot = board.getPiece(spot);
             
             if(!pieceAtTheSpot) continue;
 
@@ -78,6 +78,51 @@ export class Piece {
                 spots.splice(i, 1);
         }
         return spots;
+    }
+
+    isValidMove(move, board) {
+        let from, to;
+
+        from = move.getFrom();
+        to = move.getTo();
+
+        let isAvalidPosition = false;
+
+        let availableMoves = this.getValidMoves(board);
+        for (let i = 0; i < availableMoves.length; i++) {
+            let move = availableMoves[i];
+            if(move.col === to.col && move.row === to.row) isAvalidPosition = true;
+        }
+        return isAvalidPosition;
+    }
+
+    getValidMoves(board) {
+        let availableMoves;
+        let to;
+
+        let piecePosition = board.getPiecePosition(this);
+
+        availableMoves = this.getAvailableMoves(board);
+
+        for(let i = availableMoves.length - 1; i >= 0; i--) {
+            to = {
+                col: availableMoves[i].col,
+                row: availableMoves[i].row
+            }
+            
+            let pieceAtTheSpot = board.getPiece(to);
+            if(pieceAtTheSpot && pieceAtTheSpot.getType() === Piece.TYPE.KING) {
+                availableMoves.splice(i, 1);
+                continue;
+            };
+            
+            //if this move puts king at risk than its not valid
+            if(board.willKingBeCheckedAfterMove(piecePosition, to)) {
+                availableMoves.splice(i, 1);
+            }
+
+        };
+        return availableMoves;
     }
 
     /**
