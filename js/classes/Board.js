@@ -17,7 +17,7 @@ export class Board {
 
         this.#createBoard();
 
-        this.#commandHandler = new CommandHandler(this);
+        this.#commandHandler = new CommandHandler();
     }
 
     #createBoard() {

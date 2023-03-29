@@ -2,8 +2,6 @@ import { Command } from "./Command.js";
 
 export class CommandHandler {
 
-    #board;
-
     #commands;
 
     //the index of the current command of the command timeline (changes with undo and redo)
@@ -13,10 +11,7 @@ export class CommandHandler {
     #commandIndex;
 
 
-    constructor(board) {
-
-        this.#board = board;
-
+    constructor() {
         this.#commands = [];
         this.#currentCommandIndex = -1;
         this.#commandIndex = -1;
@@ -55,7 +50,7 @@ export class CommandHandler {
             return;
         };
 
-        let commandSuccess = this.#commands[this.#currentCommandIndex].execute(this.#board);
+        let commandSuccess = this.#commands[this.#currentCommandIndex].execute();
 
         if(!commandSuccess) {
             this.removeCommand();
@@ -84,7 +79,7 @@ export class CommandHandler {
             return null;
         }
         
-        this.#commands[this.#currentCommandIndex].undo(this.#board);
+        this.#commands[this.#currentCommandIndex].undo();
         
         this.#decrementCurrentCommandIndex();
     }
@@ -96,6 +91,6 @@ export class CommandHandler {
             this.#currentCommandIndex = this.#commandIndex;
             return null;
         }
-        this.#commands[this.#currentCommandIndex].redo(this.#board);
+        this.#commands[this.#currentCommandIndex].redo();
     }
 }

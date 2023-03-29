@@ -3,6 +3,7 @@ import { Command } from "./Command.js";
 
 export class CastleCommand extends Command {
 
+    #board;
     #kingPosition;
     #rookPosition;
 
@@ -12,9 +13,10 @@ export class CastleCommand extends Command {
     #king;
     #rook;
 
-    constructor(kingPosition, rookPosition) {
+    constructor(board, kingPosition, rookPosition) {
         super();
 
+        this.#board = board;
         this.#kingPosition = kingPosition;
         this.#rookPosition = rookPosition;
 
@@ -23,14 +25,14 @@ export class CastleCommand extends Command {
     }
 
 
-    execute(board) {
+    execute() {
 
-        this.#king = board.getPiece(this.#kingPosition);
-        this.#rook = board.getPiece(this.#rookPosition);
+        this.#king = this.#board.getPiece(this.#kingPosition);
+        this.#rook = this.#board.getPiece(this.#rookPosition);
     
 
 
-        let pathToKing = board.canBeCastled(this.#king, this.#rook);
+        let pathToKing = this.#board.canBeCastled(this.#king, this.#rook);
         if(!pathToKing) return null;
         
         
@@ -42,11 +44,11 @@ export class CastleCommand extends Command {
         this.#rookNewPosition = pathToKing[rookNewIndex];
 
 
-        board.removePiece(this.#kingPosition);
-        board.removePiece(this.#rookPosition);
+        this.#board.removePiece(this.#kingPosition);
+        this.#board.removePiece(this.#rookPosition);
 
-        board.placePiece(this.#king, this.#kingNewPosition);
-        board.placePiece(this.#rook, this.#rookNewPosition);
+        this.#board.placePiece(this.#king, this.#kingNewPosition);
+        this.#board.placePiece(this.#rook, this.#rookNewPosition);
 
         this.#king.moved(this.#kingPosition, this.#kingNewPosition);
         this.#king.moved(this.#rookPosition, this.#rookNewPosition);
@@ -55,20 +57,20 @@ export class CastleCommand extends Command {
     }
 
 
-    undo(board) {
-        board.removePiece(this.#kingNewPosition);
-        board.removePiece(this.#rookNewPosition);
+    undo() {
+        this.#board.removePiece(this.#kingNewPosition);
+        this.#board.removePiece(this.#rookNewPosition);
 
-        board.placePiece(this.#king, this.#kingPosition);
-        board.placePiece(this.#rook, this.#rookPosition);
+        this.#board.placePiece(this.#king, this.#kingPosition);
+        this.#board.placePiece(this.#rook, this.#rookPosition);
     }
 
-    redo(board) {
-        board.removePiece(this.#kingPosition);
-        board.removePiece(this.#rookPosition);
+    redo() {
+        this.#board.removePiece(this.#kingPosition);
+        this.#board.removePiece(this.#rookPosition);
 
-        board.placePiece(this.#king, this.#kingNewPosition);
-        board.placePiece(this.#rook, this.#rookNewPosition);
+        this.#board.placePiece(this.#king, this.#kingNewPosition);
+        this.#board.placePiece(this.#rook, this.#rookNewPosition);
     }
 
 }
