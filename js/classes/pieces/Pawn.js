@@ -17,6 +17,11 @@ export class Pawn extends Piece {
     }
 
     getAvailableMoves(board) {
+        let dimension = {
+            col: board.getColumn(),
+            row: board.getRow()
+        };
+
         //if not moved allow 2 positions
         if(this.hasMoved()) {
             this.clearMoves();
@@ -39,11 +44,11 @@ export class Pawn extends Piece {
         
 
         if(this.getColour() === Piece.COLOUR.WHITE) {
-            moves = moves.concat(Movement.getOneDiagnolToTopLeft(board, piecePosition.col, piecePosition.row));
-            moves = moves.concat(Movement.getOneDiagnolToTopRight(board, piecePosition.col, piecePosition.row));
+            moves = moves.concat(Movement.getOneDiagnolToTopLeft(dimension, {...piecePosition}));
+            moves = moves.concat(Movement.getOneDiagnolToTopRight(dimension, {...piecePosition}));
         }else {
-            moves = moves.concat(Movement.getOneDiagnolToBottomLeft(board, piecePosition.col, piecePosition.row));
-            moves = moves.concat(Movement.getOneDiagnolToBottomRight(board, piecePosition.col, piecePosition.row));
+            moves = moves.concat(Movement.getOneDiagnolToBottomLeft(dimension, {...piecePosition}));
+            moves = moves.concat(Movement.getOneDiagnolToBottomRight(dimension, {...piecePosition}));
         }
         
         for (let i = 0; i < moves.length; i++) {

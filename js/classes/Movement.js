@@ -7,10 +7,13 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getForwardToTop(board, col, row) {
-        row = row - 1;
-        if(row < 0) return null;
-        return [{ col, row}];
+    static getForwardToTop(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row - 1
+        }
+        if(position.row < 0) return null;
+        return [position];
     }
 
     /**
@@ -20,10 +23,13 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getForwardToBottom(board, col, row) {
-        row = row + 1;
-        if(row >= board.getRow()) return null;
-        return [{col, row}];
+    static getForwardToBottom(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row + 1
+        }
+        if(position.row >= dimension.row) return null;
+        return [position];
     }
 
     /**
@@ -33,10 +39,13 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getForwardToLeft(board, col, row) {
-        col = col - 1;
-        if(col < 0) return null;
-        return [{ col, row}];
+    static getForwardToLeft(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col - 1,
+            row: piecePosition.row
+        }
+        if(position.col < 0) return null;
+        return [position];
     }
 
     /**
@@ -46,10 +55,13 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getForwardToRight(board, col, row) {
-        col = col + 1;
-        if(col >= board.getColumn()) return null;
-        return [{col, row}];
+    static getForwardToRight(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col + 1,
+            row: piecePosition.row
+        }
+        if(position.col >= dimension.col) return null;
+        return [position];
     }
 
     /**
@@ -59,11 +71,17 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getVerticalToTop(board, col, row) {
+    static getVerticalToTop(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
         let spot;
-        for (let i = row; i >= 0; i--) {
-            spot = Movement.getForwardToTop(board, col, i);
+        for (let i = piecePosition.row; i >= 0; i--) {
+            position.row = i;
+            spot = Movement.getForwardToTop(dimension, position);
             if(!spot) break;
             spots = spots.concat(spot);
         }
@@ -77,11 +95,17 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getVerticalToBottom(board, col, row) {
+    static getVerticalToBottom(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
         let spot;
-        for (let i = row; i < board.getRow(); i++) {
-            spot = Movement.getForwardToBottom(board, col, i);
+        for (let i = piecePosition.row; i < dimension.row; i++) {
+            position.row = i;
+            spot = Movement.getForwardToBottom(dimension, position);
             if(!spot) break;
             spots = spots.concat(spot);
         }
@@ -95,11 +119,17 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getHorizontalToLeft(board, col, row) {
+    static getHorizontalToLeft(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
         let spot;
-        for (let i = col; i >= 0; i--) {
-            spot = Movement.getForwardToLeft(board, i, row);
+        for (let i = piecePosition.col; i >= 0; i--) {
+            position.col = i;
+            spot = Movement.getForwardToLeft(dimension, position);
             if(!spot) break;
             spots = spots.concat(spot);
         }
@@ -113,43 +143,58 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getHorizontalToRight(board, col, row) {
+    static getHorizontalToRight(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
         let spots = [];
         let spot;
-        for (let i = col; i < board.getColumn(); i++) {
-            spot = Movement.getForwardToRight(board, i, row);
+        for (let i = piecePosition.col; i < dimension.col; i++) {
+            position.col = i;
+            spot = Movement.getForwardToRight(dimension, position);
             if(!spot) break;
             spots = spots.concat(spot);
         }
         return spots;
     }
 
-    static getTwoForwardToTop(board, col, row) {
+    static getTwoForwardToTop(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
-        let spot = Movement.getForwardToTop(board, col, row);
+        let spot = Movement.getForwardToTop(dimension, position);
         let moves = 1;
 
         while(spot && moves <= 2) {
             spots = spots.concat(spot);
-            col = spot[0].col;
-            row = spot[0].row;
-            spot = Movement.getForwardToTop(board, col, row);
+            position.col = spot[0].col;
+            position.row = spot[0].row;
+            spot = Movement.getForwardToTop(dimension, position);
             moves = moves + 1;
         }
 
         return spots;
     }
 
-    static getTwoForwardToBottom(board, col, row) {
+    static getTwoForwardToBottom(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
-        let spot = Movement.getForwardToBottom(board, col, row);
+        let spot = Movement.getForwardToBottom(dimension, position);
         let moves = 1;
 
         while(spot && moves <= 2) {
             spots = spots.concat(spot);
-            col = spot[0].col;
-            row = spot[0].row;
-            spot = Movement.getForwardToBottom(board, col, row);
+            position.col = spot[0].col;
+            position.row = spot[0].row;
+            spot = Movement.getForwardToBottom(dimension, position);
             moves = moves + 1;
         }
 
@@ -169,11 +214,14 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getOneDiagnolToTopLeft(board, col, row) {
-        col = col - 1;
-        row = row - 1;
-        if(col < 0 || row < 0) return null;
-        return [{ col, row}];
+    static getOneDiagnolToTopLeft(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col - 1,
+            row: piecePosition.row - 1
+        };
+
+        if(position.col < 0 || position.row < 0) return null;
+        return [position];
     }
 
     /**
@@ -183,11 +231,13 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getOneDiagnolToTopRight(board, col, row) {
-        col = col + 1;
-        row = row - 1;
-        if(col >= board.getColumn() || row < 0) return null;
-        return [{ col, row}];
+    static getOneDiagnolToTopRight(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col + 1,
+            row: piecePosition.row - 1
+        };
+        if(position.col >= dimension.col || position.row < 0) return null;
+        return [position];
     }
 
     /**
@@ -197,11 +247,14 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getOneDiagnolToBottomRight(board, col, row) {
-        col = col + 1;
-        row = row + 1;
-        if(col >= board.getColumn() || row >= board.getRow()) return null;
-        return [{ col, row}];
+    static getOneDiagnolToBottomRight(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col + 1,
+            row: piecePosition.row + 1
+        };
+
+        if(position.col >= dimension.col || position.row >= dimension.row) return null;
+        return [position];
     }
 
     /**
@@ -211,11 +264,14 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getOneDiagnolToBottomLeft(board, col, row) {
-        col = col - 1;
-        row = row + 1;
-        if(col < 0 || row >= board.getRow()) return null;
-        return [{ col, row}];
+    static getOneDiagnolToBottomLeft(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col - 1,
+            row: piecePosition.row + 1
+        };
+
+        if(position.col < 0 || position.row >= dimension.row) return null;
+        return [position];
     }
 
     /**
@@ -225,15 +281,20 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getDiagnolToTopLeft(board, col, row) {
+    static getDiagnolToTopLeft(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
-        let spot = Movement.getOneDiagnolToTopLeft(board, col, row);
+        let spot = Movement.getOneDiagnolToTopLeft(dimension, position);
         
         while(spot && spot.length > 0) {
             spots = spots.concat(spot);
-            col = spot[0].col;
-            row = spot[0].row;
-            spot = Movement.getOneDiagnolToTopLeft(board, col, row);
+            position.col = spot[0].col;
+            position.row = spot[0].row;
+            spot = Movement.getOneDiagnolToTopLeft(dimension, position);
         }
 
         return spots;
@@ -246,15 +307,20 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getDiagnolToTopRight(board, col, row) {
+    static getDiagnolToTopRight(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
-        let spot = Movement.getOneDiagnolToTopRight(board, col, row);
+        let spot = Movement.getOneDiagnolToTopRight(dimension, position);
 
         while(spot && spot.length > 0) {
             spots = spots.concat(spot);
-            col = spot[0].col;
-            row = spot[0].row;
-            spot = Movement.getOneDiagnolToTopRight(board, col, row);
+            position.col = spot[0].col;
+            position.row = spot[0].row;
+            spot = Movement.getOneDiagnolToTopRight(dimension, position);
         }
 
         return spots;
@@ -267,15 +333,20 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getDiagnolToBottomRight(board, col, row) {
+    static getDiagnolToBottomRight(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
+
         let spots = [];
-        let spot = Movement.getOneDiagnolToBottomRight(board, col, row);
+        let spot = Movement.getOneDiagnolToBottomRight(dimension, position);
 
         while(spot && spot.length > 0) {
             spots = spots.concat(spot);
-            col = spot[0].col;
-            row = spot[0].row;
-            spot = Movement.getOneDiagnolToBottomRight(board, col, row);
+            position.col = spot[0].col;
+            position.row = spot[0].row;
+            spot = Movement.getOneDiagnolToBottomRight(dimension, position);
         }
 
         return spots;
@@ -288,15 +359,19 @@ export class Movement {
      * @param {*} row 
      * @returns 
      */
-    static getDiagnolToBottomLeft(board, col, row) {
+    static getDiagnolToBottomLeft(dimension, piecePosition) {
+        let position = {
+            col: piecePosition.col,
+            row: piecePosition.row
+        };
         let spots = [];
-        let spot = Movement.getOneDiagnolToBottomLeft(board, col, row);
+        let spot = Movement.getOneDiagnolToBottomLeft(dimension, position);
 
         while(spot && spot.length > 0) {
             spots = spots.concat(spot);
-            col = spot[0].col;
-            row = spot[0].row;
-            spot = Movement.getOneDiagnolToBottomLeft(board, col, row);
+            position.col = spot[0].col;
+            position.row = spot[0].row;
+            spot = Movement.getOneDiagnolToBottomLeft(dimension, position);
         }
 
         return spots;
@@ -306,18 +381,18 @@ export class Movement {
      * Knight Unique movements
      */
 
-    static getKnightMovement(board, col, row) {
+    static getKnightMovement(dimension, piecePosition) {
         let spots = [];
         let spot;
-        let spotCol = col;
-        let spotRow = row;
+        let spotCol = piecePosition.col;
+        let spotRow = piecePosition.row;
         
         for (let i = -1; i <= 1; i++) {
             for(let j = -1; j <= 1; j++) {
                 if(i == 0 || j == 0) continue;
-                spotCol = col + (2 * i);
-                spotRow = row + (1 * j);
-                if(!(spotCol < 0 || spotCol >= board.getColumn() || spotRow < 0 || spotRow >= board.getRow())) {
+                spotCol = piecePosition.col + (2 * i);
+                spotRow = piecePosition.row + (1 * j);
+                if(!(spotCol < 0 || spotCol >= dimension.col || spotRow < 0 || spotRow >= dimension.row)) {
                     spot = {
                         col: spotCol,
                         row: spotRow
@@ -330,9 +405,9 @@ export class Movement {
         for (let i = -1; i <= 1; i++) {
             for(let j = -1; j <= 1; j++) {
                 if(i == 0 || j == 0) continue;
-                spotCol = col + (1 * i);
-                spotRow = row + (2 * j);
-                if(!(spotCol < 0 || spotCol >= board.getColumn() || spotRow < 0 || spotRow >= board.getRow())) {
+                spotCol = piecePosition.col + (1 * i);
+                spotRow = piecePosition.row + (2 * j);
+                if(!(spotCol < 0 || spotCol >= dimension.col || spotRow < 0 || spotRow >= dimension.row)) {
                     spot = {
                         col: spotCol,
                         row: spotRow

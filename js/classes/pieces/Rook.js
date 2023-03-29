@@ -15,12 +15,17 @@ export class Rook extends Piece {
     }
 
     pathToKing(board) {
+        let dimension = {
+            col: board.getColumn(),
+            row: board.getRow()
+        };
+
         let piecePosition = board.getPiecePosition(this);
         let kingExistsObj = {};
 
         for (let i = 0; i < this.getMoves().length; i++) {
             const move = this.getMoves()[i];
-            let spots = move(board, piecePosition.col, piecePosition.row);
+            let spots = move(dimension, {...piecePosition});
             if(!spots) continue;
             kingExistsObj = this.checkPathForKing(board, spots);
             if(kingExistsObj.kingExists) return kingExistsObj.spots;

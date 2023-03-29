@@ -30,15 +30,29 @@ export class Piece {
         this.#moved = false;
     }
 
+    /**
+     * Returns all moves that this piece can do
+     * @returns an array of arrays that contains all moves on each direction
+     */
+    getAllMoves() {
+    }
     
 
     getAvailableMoves(board) {
+        let dimension = {
+            col: board.getColumn(),
+            row: board.getRow()
+        };
         let piecePosition = board.getPiecePosition(this);
-        let validSpots = [];
 
+        
+        let validSpots = [];
+        
         for (let i = 0; i < this.#moves.length; i++) {
+            
             const move = this.#moves[i];
-            let spots = move(board, piecePosition.col, piecePosition.row);
+            let spots = move(dimension, {... piecePosition});
+
             if(!spots) continue;
             validSpots = validSpots.concat(this.checkPathForValidSpots(board, spots));
         }
@@ -48,7 +62,9 @@ export class Piece {
     checkPathForValidSpots(board, spots) {
         for(let i = 0; i < spots.length; i++) {
             let spot = spots[i];
-            let pieceAtTheSpot = board.getPiece(spot);
+            let pieceAtTheSpot;
+
+            pieceAtTheSpot = board.getPiece(spot);
             
             if(!pieceAtTheSpot) continue;
 
