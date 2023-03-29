@@ -44,11 +44,11 @@ export class Pawn extends Piece {
         
 
         if(this.getColour() === Piece.COLOUR.WHITE) {
-            moves = moves.concat(Movement.getOneDiagnolToTopLeft(dimension, {...piecePosition}));
-            moves = moves.concat(Movement.getOneDiagnolToTopRight(dimension, {...piecePosition}));
+            moves = moves.concat(Movement.getOneDiagnolToTopLeft(dimension, piecePosition));
+            moves = moves.concat(Movement.getOneDiagnolToTopRight(dimension, piecePosition));
         }else {
-            moves = moves.concat(Movement.getOneDiagnolToBottomLeft(dimension, {...piecePosition}));
-            moves = moves.concat(Movement.getOneDiagnolToBottomRight(dimension, {...piecePosition}));
+            moves = moves.concat(Movement.getOneDiagnolToBottomLeft(dimension, piecePosition));
+            moves = moves.concat(Movement.getOneDiagnolToBottomRight(dimension, piecePosition));
         }
         
         for (let i = 0; i < moves.length; i++) {

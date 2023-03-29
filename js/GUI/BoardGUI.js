@@ -55,6 +55,9 @@ export class BoardGUI {
     }
 
     clicked(block) {
+
+        let whitePlayer = this.#game.getPlayer(Piece.COLOUR.WHITE);
+
         let commadHandler = this.#board.getCommandHandler();
         let from, to, command;
 
@@ -85,7 +88,10 @@ export class BoardGUI {
             commadHandler.addCommand(command);
             commadHandler.executeNextCommand();
             
-
+            // console.log(whitePlayer.getAttackingSpots(this.#board));
+            console.log(whitePlayer.getAttackingSpots(this.#board));
+            // console.log(whitePlayer.isKingInCheck());
+            console.log(whitePlayer.isInStaleMate());
 
 
             this.#clickedPiece = null;

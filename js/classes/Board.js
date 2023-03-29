@@ -149,6 +149,7 @@ export class Board {
         return checksTheKing;
     }
 
+
     getAllValidMoves(colour) {
         let piece, validMoves = [];
         for (let i = 0; i < this.#grid.length; i++) {
@@ -165,6 +166,15 @@ export class Board {
         return validMoves;
     }
 
+    getAllPieces() {
+        let pieces = [];
+        for (let i = 0; i < this.#grid.length; i++) {
+            for (let j = 0; j < this.#grid[i].length; j++) {
+                if(this.#grid[i][j]) pieces.push(this.#grid[i][j]);   
+            }
+        }
+        return pieces;
+    }
 
     getAllColouredPieces(colour) {
         let colouredPieces = [];

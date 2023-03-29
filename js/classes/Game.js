@@ -1,6 +1,6 @@
 import { Board } from "./Board.js";
 import { Piece } from "./pieces/Piece.js";
-import { Player } from "./Player.js";
+import { Player } from "./players/Player.js";
 import { PieceFactory } from "./pieces/PieceFactory.js";
 
 export class Game {
@@ -17,11 +17,11 @@ export class Game {
     #winner;
 
     constructor() {
-        this.createPlayers();
         this.changeTurn();
-
+        
         this.createBoard();
-
+        
+        this.createPlayers();
         this.resetGame();
     }
 
@@ -55,9 +55,13 @@ export class Game {
 
     }
 
+    getPlayer(colour) {
+        return this.#players.find(player => player.getColour() === colour);
+    }
+
     createPlayers() {
-        this.#players.push(new Player(Piece.COLOUR.WHITE));
-        this.#players.push(new Player(Piece.COLOUR.BLACK));
+        this.#players.push(new Player(this.#board, Piece.COLOUR.WHITE));
+        this.#players.push(new Player(this.#board, Piece.COLOUR.BLACK));
     }
 
     changeTurn() {

@@ -25,7 +25,7 @@ export class Rook extends Piece {
 
         for (let i = 0; i < this.getMoves().length; i++) {
             const move = this.getMoves()[i];
-            let spots = move(dimension, {...piecePosition});
+            let spots = move(dimension, piecePosition);
             if(!spots) continue;
             kingExistsObj = this.checkPathForKing(board, spots);
             if(kingExistsObj.kingExists) return kingExistsObj.spots;

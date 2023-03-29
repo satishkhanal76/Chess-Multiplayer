@@ -30,12 +30,6 @@ export class Piece {
         this.#moved = false;
     }
 
-    /**
-     * Returns all moves that this piece can do
-     * @returns an array of arrays that contains all moves on each direction
-     */
-    getAllMoves() {
-    }
     
 
     getAvailableMoves(board) {
@@ -51,7 +45,7 @@ export class Piece {
         for (let i = 0; i < this.#moves.length; i++) {
             
             const move = this.#moves[i];
-            let spots = move(dimension, {... piecePosition});
+            let spots = move(dimension, piecePosition);
 
             if(!spots) continue;
             validSpots = validSpots.concat(this.checkPathForValidSpots(board, spots));
