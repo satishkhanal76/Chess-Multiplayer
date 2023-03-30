@@ -98,8 +98,11 @@ export class BoardGUI {
 
 
             let validMoves = this.#game.getCurrentTurn().getValidMoves(piece);
-            // let validMoves = piece.getValidMoves(this.#board);
-            this.showValidMoves(validMoves);
+            if(!validMoves || validMoves.length < 1) {
+                this.#clickedPiece = null;
+            } else {
+                this.showValidMoves(validMoves);
+            }
         }
     }
 
