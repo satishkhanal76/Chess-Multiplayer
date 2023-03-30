@@ -135,6 +135,19 @@ export class Piece {
         return availableMoves;
     }
 
+    getAttackingPieces(board) {
+        let pieces = [];
+        let moves = this.getAvailableMoves(board);
+
+        for (let i = 0; i < moves.length; i++) {
+            const move = moves[i];
+            let piece = board.getPiece(move);
+            if(piece && piece.getColour() !== this.getColour()) pieces.push(piece);
+        }
+
+        return pieces;
+    }
+
     /**
      * This method is called whenever a piece is moved
 

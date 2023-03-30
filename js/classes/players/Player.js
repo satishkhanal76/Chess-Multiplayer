@@ -13,19 +13,93 @@ export class Player {
         this.#pieces = [];
     }
 
-    isInCheck() {
+    /**
+     * Finds and returns all rooks that can be castled with the king
+     */
+    rooksThatCanLegallyCastle() {
+        let king = this.findKing();
+
+        //if the king has moved or is in check(no legal castles)
+        if(king.hasMoved() || this.isInCheck()) return [];
+
+        let rooks = this.findPieces(Piece.TYPE.ROOK);
+        let legalRooks = [];
+
+        for (let i = 0; i < rooks.length; i++) {
+            const rook = rooks[i];
+            if(rook.hasMoved()) continue;
+
+            const pathToKing = rook.pathToKing(this.#board);
+            if(!pathToKing) continue;
+
+            let spotsUnderAttackByEnemy = this.getSpotsUnderAttackByEnemies();
+
+            let spotUnderAttack = false;
+            pathToKing.forEach(spot => {
+                let onSpot = spotsUnderAttackByEnemy.filter(move => spot.col == move.col && spot.row == move.row);
+                if(onSpot.length >= 1) {
+                    spotUnderAttack = true;
+                }
+            })
+            if(spotUnderAttack) continue;
+
+            legalRooks.push(rook);
+        }
+        return legalRooks;
+    }
+
+    /**
+     * Determines if the move passed in will put player in check
+     */
+    willMovePutInCheck(from, to) {
+        let fromPiece = this.#board.getPiece(from);
+        let toPiece = this.#board.getPiece(to);
+        if(!fromPiece) return true;
+        
+        
+        //move the piece
+        this.#board.removePiece(from);
+        this.#board.placePiece(fromPiece, to);
+        
+        
+        
+        let willBe = false;
+        if(this.isInCheck()) {
+            willBe = true;;
+        }
+        
+        //reverse the move
+        this.#board.removePiece(to);
+        this.#board.placePiece(fromPiece, from);
+        this.#board.placePiece(toPiece, to);
+        return willBe;
+    }
+
+    getSpotsUnderAttackByEnemies() {
         const allPiecesOnTheBoard = this.#board.getAllPieces();
         const enemyPieces = Player.filterOutColouredPieces(allPiecesOnTheBoard, this.getColour());
-        let spotsAttackedByEnemeyPieces = [];
+        let spotsUnderAttackByEnemy = [];
 
         enemyPieces.forEach(piece => {
-            spotsAttackedByEnemeyPieces = spotsAttackedByEnemeyPieces.concat(piece.getAvailableMoves(this.#board));
+            spotsUnderAttackByEnemy = spotsUnderAttackByEnemy.concat(piece.getValidMoves(this.#board));
         });
+        return spotsUnderAttackByEnemy;
+    }
 
-        const kingPosition = this.#board.getPiecePosition(this.getKing());
-        const kingOnAttakedSpots = spotsAttackedByEnemeyPieces.filter(spot => spot.col == kingPosition.col && spot.row == kingPosition.row);
-        if(kingOnAttakedSpots.length >= 1) return true;
-        return false;
+    getPiecesUnderAttackByEnemies() {
+        const allPiecesOnTheBoard = this.#board.getAllPieces();
+        const enemyPieces = Player.filterOutColouredPieces(allPiecesOnTheBoard, this.getColour());
+        let piecesUnderAttack= [];
+
+        enemyPieces.forEach(piece => {
+            piecesUnderAttack = piecesUnderAttack.concat(piece.getAttackingPieces(this.#board));
+        });
+        return piecesUnderAttack;
+    }
+
+    isInCheck() {
+        let piecesUnderAttackByEnemy = this.getPiecesUnderAttackByEnemies();
+        return piecesUnderAttackByEnemy.includes(this.findKing());
     }
 
     /**
@@ -50,8 +124,12 @@ export class Player {
         return false;
     }
 
-    getKing() {
-        return this.getPiece(Piece.TYPE.KING);
+    /**
+     * Finds and returns the king
+     * @returns 
+     */
+    findKing() {
+        return this.findPiece(Piece.TYPE.KING);
     }
 
     getAttackingSpots() {
@@ -75,13 +153,22 @@ export class Player {
     }
 
     /**
-     * Finds a piece of the type
+     * Finds returns the first piece that matches the type
      * @param {*} pieceType 
      * @returns 
      */
-    getPiece(pieceType) {
+    findPiece(pieceType) {
+        let pieces = this.findPieces(pieceType);
+        if(pieces.length >= 1) return pieces[0];
+        return null;
+    }
+
+    /**
+     * Finds and returns all pieces that match the type
+     */
+    findPieces(pieceType) {
         this.getPieces();
-        return this.#pieces.find(p => p.getType() === pieceType);
+        return this.#pieces.filter(piece => piece.getType() === pieceType);
     }
 
     /**

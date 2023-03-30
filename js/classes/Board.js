@@ -29,7 +29,7 @@ export class Board {
             }
         }
     }
-
+    ///// Doesnot belong to the board -start ////
     isCheckingTheKing(colour) {
         let colouredPieces = this.getAllColouredPieces(colour);
 
@@ -125,18 +125,6 @@ export class Board {
         this.#grid[to.col][to.row] = toPiece;
         return willBe;
     }
-    
-
-    isValidPosition(from, to) {
-        let isAvalidPosition = false;
-
-        let availableMoves = this.getValidMoves(from.col, from.row);
-        for (let i = 0; i < availableMoves.length; i++) {
-            let move = availableMoves[i];
-            if(move.col === to.col && move.row === to.row) isAvalidPosition = true;
-        }
-        return isAvalidPosition;
-    }
 
     isKingBeingChecked(colour) {
         let checksTheKing = false;
@@ -165,6 +153,8 @@ export class Board {
         }
         return validMoves;
     }
+
+    ///// Doesnot belong to the board -end ////
 
     getAllPieces() {
         let pieces = [];

@@ -1,4 +1,4 @@
-import { Movement } from "../Movement.js";
+import { Movement } from "./Movement.js";
 import { Piece } from "./Piece.js";
 
 export class King extends Piece {

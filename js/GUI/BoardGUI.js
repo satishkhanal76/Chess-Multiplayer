@@ -80,19 +80,17 @@ export class BoardGUI {
 
             if(fromPiece?.getType() === Piece.TYPE.KING && toPiece?.getType() === Piece.TYPE.ROOK) {
                 command = new CastleCommand(this.#board, from, to);
+
                 
             } else {
                 command = new MoveCommand(this.#board, from, to);
+                console.log(whitePlayer.willMovePutInCheck(from, to));
             }
             
             commadHandler.addCommand(command);
             commadHandler.executeNextCommand();
             
-            // console.log(whitePlayer.getAttackingSpots(this.#board));
-            console.log(whitePlayer.getAttackingSpots(this.#board));
-            // console.log(whitePlayer.isKingInCheck());
-            console.log(whitePlayer.isInStaleMate());
-
+            // console.log(whitePlayer.isInCheck());
 
             this.#clickedPiece = null;
             this.updateBoard();
