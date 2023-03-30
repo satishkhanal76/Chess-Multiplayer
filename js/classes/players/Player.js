@@ -1,16 +1,96 @@
+import { CastleCommand } from "../commands/CastleCommand.js";
+import { MoveCommand } from "../commands/MoveCommand.js";
+import { PromotionCommand } from "../commands/PromotionCommand.js";
 import { Piece } from "../pieces/Piece.js";
+import { PieceFactory } from "../pieces/PieceFactory.js";
 
 export class Player {
 
     #board;
+
+
     #color;
     #pieces;
+
+    #takenPieces;
     
     constructor(board, color) {
         this.#board = board;
 
         this.#color = color;
         this.#pieces = [];
+        this.#takenPieces = [];
+    }
+
+    getValidMoves(piece) {
+        if(piece.getColour() !== this.getColour()) return [];
+
+        return piece.getValidMoves(this, this.#board);
+    }
+
+    /**
+     * Moves the piece on the board
+     */
+    movePiece(piece, at) {
+        //if not our piece then return
+        if(piece.getColour() !== this.getColour()) return false;
+
+        let from = this.#board.getPiecePosition(piece);
+
+        const command = new MoveCommand(this, this.#board, from, at);
+
+        this.#board.getCommandHandler().addCommand(command);
+        this.#board.getCommandHandler().executeNextCommand();
+
+        let takenPiece;
+        takenPiece = command.getTakingPiece()
+        if(command.isAValidCommand() && takenPiece) {
+            this.#takenPieces.push(takenPiece);
+        }
+
+        return command.isAValidCommand();
+    }
+
+    promotePiece(piece, to, pieceType) {
+        //if not our piece then return
+        if(piece.getColour() !== this.getColour()) return false;
+        let from = this.#board.getPiecePosition(piece);
+
+        if(to.row != piece.getPromotionRow()) return false;
+
+        let promotionPiece = PieceFactory.getPiece(pieceType, this.getColour());
+        const command = new PromotionCommand(this, this.#board, from, to, promotionPiece);
+
+
+        this.#board.getCommandHandler().addCommand(command);
+        this.#board.getCommandHandler().executeNextCommand();
+
+        let takenPiece;
+        takenPiece = command.getTakingPiece();
+        if(command.isAValidCommand() && takenPiece) {
+            this.#takenPieces.push(takenPiece);
+        }
+
+        return command.isAValidCommand();
+
+    }
+
+    castle(kingPos, rookPos) {
+        let rook = this.#board.getPiece(rookPos);
+        if(!rook) return false;
+
+        let legalRooksThatCanCastle = this.rooksThatCanLegallyCastle();
+
+        let canCastle = legalRooksThatCanCastle.find(r => r === rook);
+
+        if(!canCastle) return false;
+
+        let command = new CastleCommand(this.#board, kingPos, rookPos);
+        
+        this.#board.getCommandHandler().addCommand(command);
+        this.#board.getCommandHandler().executeNextCommand();
+
+        return true;
     }
 
     /**
@@ -58,8 +138,7 @@ export class Player {
         
         
         //move the piece
-        this.#board.removePiece(from);
-        this.#board.placePiece(fromPiece, to);
+        this.#board.movePiece(fromPiece, to);
         
         
         
@@ -69,8 +148,7 @@ export class Player {
         }
         
         //reverse the move
-        this.#board.removePiece(to);
-        this.#board.placePiece(fromPiece, from);
+        this.#board.movePiece(fromPiece, from);
         this.#board.placePiece(toPiece, to);
         return willBe;
     }
@@ -81,7 +159,7 @@ export class Player {
         let spotsUnderAttackByEnemy = [];
 
         enemyPieces.forEach(piece => {
-            spotsUnderAttackByEnemy = spotsUnderAttackByEnemy.concat(piece.getValidMoves(this.#board));
+            spotsUnderAttackByEnemy = spotsUnderAttackByEnemy.concat(piece.getValidMoves(this, this.#board));
         });
         return spotsUnderAttackByEnemy;
     }
@@ -133,12 +211,12 @@ export class Player {
     }
 
     getAttackingSpots() {
-        this.getPieces(); //get all coloured the pieces from the board
+        this.getPieces(); //get all coloured pieces from the board
 
         let moves = [];
         //get attaking spots for all pieces
         this.#pieces.forEach(piece => {
-            moves = moves.concat(piece.getValidMoves(this.#board));
+            moves = moves.concat(piece.getValidMoves(this, this.#board));
         })
         return moves;
     }

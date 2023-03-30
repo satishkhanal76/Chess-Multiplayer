@@ -2,8 +2,8 @@ import { Movement } from "./Movement.js";
 import { Piece } from "./Piece.js";
 
 export class Rook extends Piece {
-    constructor(character, colour) {
-        super(Piece.TYPE.ROOK, character, colour);
+    constructor(piece, colour) {
+        super(piece.type, piece.character, colour);
         this.configureMoves();
     }
 

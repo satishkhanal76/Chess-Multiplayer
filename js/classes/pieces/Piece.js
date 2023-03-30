@@ -90,7 +90,7 @@ export class Piece {
         return spots;
     }
 
-    isValidMove(move, board) {
+    isValidMove(player, move, board) {
         let from, to;
 
         from = move.getFrom();
@@ -98,7 +98,7 @@ export class Piece {
 
         let isAvalidPosition = false;
 
-        let availableMoves = this.getValidMoves(board);
+        let availableMoves = this.getValidMoves(player, board);
         for (let i = 0; i < availableMoves.length; i++) {
             let move = availableMoves[i];
             if(move.col === to.col && move.row === to.row) isAvalidPosition = true;
@@ -106,7 +106,7 @@ export class Piece {
         return isAvalidPosition;
     }
 
-    getValidMoves(board) {
+    getValidMoves(player, board) {
         let availableMoves;
         let to;
 
@@ -127,7 +127,7 @@ export class Piece {
             };
             
             //if this move puts king at risk than its not valid
-            if(board.willKingBeCheckedAfterMove(piecePosition, to)) {
+            if(player.willMovePutInCheck(piecePosition, to)) {
                 availableMoves.splice(i, 1);
             }
 

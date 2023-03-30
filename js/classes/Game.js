@@ -14,14 +14,16 @@ export class Game {
 
 
     #isOver = false;
+
     #winner;
 
     constructor() {
-        this.changeTurn();
         
         this.createBoard();
         
         this.createPlayers();
+        this.changeTurn();
+
         this.resetGame();
     }
 
@@ -74,37 +76,43 @@ export class Game {
         this.#currentTurn = this.#players[this.#currentTurnIndex];
     }
 
-    movePiece(fromCol, fromRow, toCol, toRow) {
-        let from = {
-            col: fromCol,
-            row: fromRow
-        }, to = {
-            col: toCol,
-            row: toRow
-        };
-
-        let piece = this.#board.getPiece(from.col, from.row);
-        let movedPiece;
-        if(piece && piece.getColour() == this.#currentTurn.getColour()) {
-            movedPiece = this.#board.movePiece(from, to);
+    checkForOver() {
+        this.#checkForStalemate();
+        this.#checkForCheckmate();
+    }
+    
+    #checkForCheckmate() {
+        let leftPlayer = this.#players.filter(player => !player.isInCheckMate());
+        if(leftPlayer.length == 1) {
+            this.#isOver = true;
+            this.#winner = leftPlayer[0];
         }
-        if(movedPiece) {
-            this.changeTurn();
-        }
-
-        this.checkForOver();
     }
 
-    checkForOver() {
-        let moves = this.#board.getAllValidMoves(this.#currentTurn.getColour());
+    #checkForStalemate() {
+        const staleMate = this.#players.find(player => player.isInStaleMate());
+        if(!staleMate) return;
+        this.#isOver = true;
+        this.#winner = null;
+    }
 
-        if(moves.length <= 0 && this.#board.isKingBeingChecked(this.#currentTurn.getColour())) {
-            this.#winner = this.getNextTurn();
-            this.#isOver = true;
-        }else if(moves.length <= 0) {
-            this.#winner = null;
-            this.#isOver = true;
-        }
+    movePiece(piece, at) {
+        if(this.#currentTurn.movePiece(piece, at)) {
+            this.changeTurn();
+        };
+    }
+
+    castle(kingPos, rookPos) {
+        if(this.#currentTurn.castle(kingPos, rookPos)) {
+            this.changeTurn();
+        };
+    }
+
+    promotePiece(piece, at, promotionPieceType) {
+        if(!piece) return;
+        if(this.#currentTurn.promotePiece(piece, at, promotionPieceType)) {
+            this.changeTurn();
+        };
     }
 
     getCurrentTurn() {
@@ -126,6 +134,7 @@ export class Game {
     }
 
     isOver() {
+        this.checkForOver();
         return this.#isOver;
     }
 

@@ -56,10 +56,8 @@ export class BoardGUI {
 
     clicked(block) {
 
-        let whitePlayer = this.#game.getPlayer(Piece.COLOUR.WHITE);
 
-        let commadHandler = this.#board.getCommandHandler();
-        let from, to, command;
+        let from, to;
 
         to = {
             col: block.getColumn(),
@@ -79,19 +77,16 @@ export class BoardGUI {
             let toPiece = this.#board.getPiece(to);
 
             if(fromPiece?.getType() === Piece.TYPE.KING && toPiece?.getType() === Piece.TYPE.ROOK) {
-                command = new CastleCommand(this.#board, from, to);
-
+                this.#game.castle(from, to);
                 
-            } else {
-                command = new MoveCommand(this.#board, from, to);
-                console.log(whitePlayer.willMovePutInCheck(from, to));
+            } else if(fromPiece.getType() === Piece.TYPE.PAWN && fromPiece.getPromotionRow() === to.row) {
+                this.#game.promotePiece(this.#board.getPiece(from), to, Piece.TYPE.QUEEN);
+
+            }else {
+                this.#game.movePiece(this.#board.getPiece(from), to);
             }
             
-            commadHandler.addCommand(command);
-            commadHandler.executeNextCommand();
             
-            // console.log(whitePlayer.isInCheck());
-
             this.#clickedPiece = null;
             this.updateBoard();
             this.displayModalIfOver();
@@ -100,8 +95,10 @@ export class BoardGUI {
             if(!piece) return null;
             
             this.#clickedPiece = block;
-    
-            let validMoves = piece.getValidMoves(this.#board);
+
+
+            let validMoves = this.#game.getCurrentTurn().getValidMoves(piece);
+            // let validMoves = piece.getValidMoves(this.#board);
             this.showValidMoves(validMoves);
         }
     }

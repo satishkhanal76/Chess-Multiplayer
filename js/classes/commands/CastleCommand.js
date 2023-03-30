@@ -32,11 +32,8 @@ export class CastleCommand extends Command {
     
 
 
-        let pathToKing = this.#board.canBeCastled(this.#king, this.#rook);
-        if(!pathToKing) return null;
+        let pathToKing = this.#rook.pathToKing(this.#board);
         
-        
-        //castling can be done
         let kingNewIndex = pathToKing.length - 2;
         let rookNewIndex = kingNewIndex + 1;
 

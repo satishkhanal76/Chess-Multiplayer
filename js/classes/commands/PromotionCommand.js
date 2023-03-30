@@ -1,6 +1,8 @@
 import { Command } from "./Command.js";
+import { PieceFactory } from "../pieces/PieceFactory.js";
 
-export class MoveCommand extends Command {
+
+export class PromotionCommand extends Command {
 
     #player;
     #board;
@@ -13,10 +15,11 @@ export class MoveCommand extends Command {
     //keeps track of the piece that this move captures if any
     #movingPiece;
     #takingPiece;
+    #promotionPiece;
 
     #executed;
 
-    constructor(player, board, from, to) {
+    constructor(player, board, from, to, promotionPiece) {
         super();
 
         this.#player = player;
@@ -26,6 +29,8 @@ export class MoveCommand extends Command {
 
         this.#movingPiece = null;
         this.#takingPiece = null;
+        this.#promotionPiece = promotionPiece;
+
 
         this.#isValidCommand = true;
         this.#executed = false;
@@ -49,8 +54,8 @@ export class MoveCommand extends Command {
         this.#board.removePiece(this.#from);
         this.#board.removePiece(this.#to);
 
-        //place the moving piece to new location
-        this.#board.placePiece(this.#movingPiece, this.#to);
+        //place the promotion piece to new location
+        this.#board.placePiece(this.#promotionPiece, this.#to);
 
         this.#movingPiece.moved(this.#from, this.#to);
 
@@ -73,7 +78,7 @@ export class MoveCommand extends Command {
         this.#board.removePiece(this.#to);
 
         //place the moving piece to new location
-        this.#board.placePiece(this.#movingPiece, this.#to);
+        this.#board.placePiece(this.#promotionPiece, this.#to);
     }
 
 

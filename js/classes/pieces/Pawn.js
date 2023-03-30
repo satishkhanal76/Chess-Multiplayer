@@ -2,8 +2,11 @@ import { Movement } from "./Movement.js";
 import { Piece } from "./Piece.js";
 
 export class Pawn extends Piece {
-    constructor(character, colour) {
-        super(Piece.TYPE.PAWN, character, colour);
+    #promotionRow;
+    constructor(piece, colour) {
+        super(piece.type, piece.character, colour);
+
+        this.#promotionRow = piece.promotionRow;
 
         this.configureMoves();
     }
@@ -73,5 +76,9 @@ export class Pawn extends Piece {
             }
         }
         return availableMoves;
+    }
+
+    getPromotionRow() {
+        return this.#promotionRow;
     }
 }

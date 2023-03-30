@@ -10,78 +10,80 @@ import { Piece } from "./Piece.js";
 let pieceData = {
     [Piece.COLOUR.BLACK] : [
         { 
-            "type": "king",
+            "type": Piece.TYPE.KING,
             "character": "♚",
             "class": King,
             "FEN": 'k'
         },
         { 
-            "type": "queen",
+            "type": Piece.TYPE.QUEEN,
             "character": "♛",
             "class": Queen,
             "FEN": 'q'
         },
         { 
-            "type": "rook",
+            "type": Piece.TYPE.ROOK,
             "character": "♜",
             "class": Rook,
             "FEN": 'r' 
         },
         { 
-            "type": "bishop",
+            "type": Piece.TYPE.BISHOP,
             "character": "♝",
             "class": Bishop,
             "FEN": 'b'
         },
         { 
-            "type": "knight",
+            "type": Piece.TYPE.KNIGHT,
             "character": "♞",
             "class": Knight,
             "FEN": 'n'
         },
         { 
-            "type": "pawn",
+            "type": Piece.TYPE.PAWN,
             "character": "♟︎" ,
             "class": Pawn,
-            "FEN": 'p'
+            "FEN": 'p',
+            "promotionRow": 7
         }
     ],
     [Piece.COLOUR.WHITE]: [
         { 
-            "type": "king",
+            "type": Piece.TYPE.KING,
             "character": "♔",
             "class": King,
             "FEN": 'K' 
         },
         { 
-            "type": "queen",
+            "type": Piece.TYPE.QUEEN,
             "character": "♕",
             "class": Queen,
             "FEN": 'Q'
         },
         { 
-            "type": "rook",
+            "type": Piece.TYPE.ROOK,
             "character": "♖",
             "class": Rook,
             "FEN": 'R'
         },
         { 
-            "type": "bishop",
+            "type": Piece.TYPE.BISHOP,
             "character": "♗",
             "class": Bishop,
             "FEN": 'B'
         },
         { 
-            "type": "knight",
+            "type": Piece.TYPE.KNIGHT,
             "character": "♘",
             "class": Knight,
             "FEN": 'N'
         },
         { 
-            "type": "pawn",
+            "type": Piece.TYPE.PAWN,
             "character": "♙",
             "class": Pawn,
-            "FEN": 'P'
+            "FEN": 'P',
+            "promotionRow": 0
         }
     ]
 };
@@ -92,7 +94,7 @@ export class PieceFactory {
         for (let i = 0; i < pieceData[colour].length; i++) {
             let piece = pieceData[colour][i];
             if(piece.type == pieceType) {
-                return new piece.class(piece.character, colour);
+                return new piece.class(piece, colour);
             }
             
         }
@@ -104,7 +106,7 @@ export class PieceFactory {
         for (let i = 0; i < pieceData[colour].length; i++) {
             let piece = pieceData[colour][i];
             if(piece.FEN == fenCharacter) {
-                return new piece.class(piece.character, colour);
+                return new piece.class(piece, colour);
             }
         }
 
@@ -113,7 +115,7 @@ export class PieceFactory {
         for (let i = 0; i < pieceData[colour].length; i++) {
             let piece = pieceData[colour][i];
             if(piece.FEN == fenCharacter) {
-                return new piece.class(piece.character, colour);
+                return new piece.class(piece, colour);
             }
         }
         return null;
