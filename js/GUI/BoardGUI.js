@@ -172,19 +172,24 @@ export class BoardGUI {
         let piece;
 
         let block;
+        let lastColour = Piece.COLOUR.WHITE;
 
         for (let i = 0; i < grid.length; i++) {
             for (let j = 0; j < grid[i].length; j++) {
                 piece = grid[i][j];
 
-                block = new BlockGUI(j, i, this);
+                block = new BlockGUI(j, i, this, lastColour);
 
                 this.#blocks.push(block);
 
                 block.setText((piece) ? piece.getCharacter() : " ");
 
                 this.#element.append(block.getElement());
+                lastColour  = (lastColour === Piece.COLOUR.WHITE) ? Piece.COLOUR.BLACK: Piece.COLOUR.WHITE;
+
             }
+            lastColour  = (lastColour === Piece.COLOUR.WHITE) ? Piece.COLOUR.BLACK: Piece.COLOUR.WHITE;
+
         }
     }
 

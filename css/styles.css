@@ -3,9 +3,7 @@
     padding: 0;
 }
 
-.valid-spot {
-    background-color: red;
-}
+
 
 main {
     display: flex;
@@ -28,13 +26,13 @@ main {
 
     display: grid;
     grid-template-columns: repeat(var(--num-of-columns), auto);
+
+    border: 2px solid black;
 }
 
 .board .block {
     display: flex;
     
-    border: 2px solid black;
-
     width: var(--block-width);
     height: var(--block-height);
 
@@ -49,6 +47,23 @@ main {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+}
+
+.BLACK {
+    background-color: rgb(57, 128, 66);
+}
+
+.valid-spot {
+    position: relative;
+}
+
+.valid-spot::after {
+    content: "";
+    position: absolute;
+    width: calc(var(--block-width) / 2);
+    height: calc(var(--block-height) / 2);
+    background-color: rgba(255, 0, 0, 0.8);
+    border-radius: 50%;
 }
 
 .modal-container {

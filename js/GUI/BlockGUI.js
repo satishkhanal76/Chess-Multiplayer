@@ -7,11 +7,15 @@ export class BlockGUI {
 
     #boardGUI;
 
-    constructor(col, row, boardGUI) {
+    #colour;
+
+    constructor(col, row, boardGUI, colour) {
         this.#column = col;
         this.#row = row;
 
         this.#boardGUI = boardGUI;
+
+        this.#colour = colour;
 
         this.createElement();
         this.addEventListeners();
@@ -30,6 +34,8 @@ export class BlockGUI {
     createElement() {
         this.#element = document.createElement("div");
         this.#element.classList.add("block");
+        this.#element.classList.add(this.#colour);
+        
         this.#element.dataset.col = this.#column;
         this.#element.dataset.row = this.#row;
         this.setText(" ");
