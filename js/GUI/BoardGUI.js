@@ -40,18 +40,24 @@ export class BoardGUI {
         prev.addEventListener("click", () => {
             this.#board.getCommandHandler().undoCommand();
             this.updateBoard();
+            this.updateButtons();
         })
 
         
         next.addEventListener("click", () => {
             this.#board.getCommandHandler().redoCommand();
             this.updateBoard();
+            this.updateButtons();
         })
 
         current.addEventListener("click", () => {
             this.#board.getCommandHandler().executeCommands();
             this.updateBoard();
+            this.updateButtons();
+
         })
+
+        this.updateButtons();
     }
 
     clicked(block) {
@@ -90,6 +96,7 @@ export class BoardGUI {
             this.#clickedPiece = null;
             this.updateBoard();
             this.displayModalIfOver();
+            this.updateButtons();
         } else {
 
             if(!piece) return null;
@@ -103,6 +110,31 @@ export class BoardGUI {
             } else {
                 this.showValidMoves(validMoves);
             }
+        }
+    }
+
+    updateButtons() {
+        let prev = document.getElementById("previous");
+        let next = document.getElementById("next");
+        let current = document.getElementById("current");
+        let commandHandler = this.#board.getCommandHandler();
+
+        let currentCommandIndex = commandHandler.getCurrentCommandIndex();
+        let commandIndex = commandHandler.getCommandIndex();
+
+        prev.setAttribute("disabled", true);
+        next.setAttribute("disabled", true);
+        current.setAttribute("disabled", true);
+        
+        if(currentCommandIndex === -1 && commandIndex === -1) return;
+        console.log(currentCommandIndex, commandIndex);
+
+        prev.setAttribute("disabled", "false");
+        if(currentCommandIndex === commandIndex) {
+            // prev.setAttribute("disabled", false);
+        } else if(currentCommandIndex < commandIndex) {
+            next.setAttribute("disabled", false);
+            current.setAttribute("disabled", false);
         }
     }
 

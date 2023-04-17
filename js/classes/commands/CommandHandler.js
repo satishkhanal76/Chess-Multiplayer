@@ -93,4 +93,11 @@ export class CommandHandler {
         }
         this.#commands[this.#currentCommandIndex].redo();
     }
+    getCurrentCommandIndex() {
+        return this.#currentCommandIndex;
+    }
+
+    getCommandIndex() {
+        return this.#commandIndex;
+    }
 }
