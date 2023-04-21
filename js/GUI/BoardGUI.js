@@ -126,10 +126,7 @@ export class BoardGUI {
         next.disabled = true;
         current.disabled = true;
         
-        if(currentCommandIndex === -1 && commandIndex === -1) {
-            console.log("not played");
-            return;
-        };
+        if(currentCommandIndex === -1 && commandIndex === -1) return;
         
         if(currentCommandIndex <= commandIndex && currentCommandIndex > -1) {
             prev.disabled = false;
