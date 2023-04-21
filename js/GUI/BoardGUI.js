@@ -122,19 +122,21 @@ export class BoardGUI {
         let currentCommandIndex = commandHandler.getCurrentCommandIndex();
         let commandIndex = commandHandler.getCommandIndex();
 
-        prev.setAttribute("disabled", true);
-        next.setAttribute("disabled", true);
-        current.setAttribute("disabled", true);
+        prev.disabled = true;
+        next.disabled = true;
+        current.disabled = true;
         
-        if(currentCommandIndex === -1 && commandIndex === -1) return;
-        console.log(currentCommandIndex, commandIndex);
-
-        prev.setAttribute("disabled", "false");
-        if(currentCommandIndex === commandIndex) {
-            // prev.setAttribute("disabled", false);
-        } else if(currentCommandIndex < commandIndex) {
-            next.setAttribute("disabled", false);
-            current.setAttribute("disabled", false);
+        if(currentCommandIndex === -1 && commandIndex === -1) {
+            console.log("not played");
+            return;
+        };
+        
+        if(currentCommandIndex <= commandIndex && currentCommandIndex > -1) {
+            prev.disabled = false;
+        } 
+        if(currentCommandIndex < commandIndex) {
+            next.disabled = false;
+            current.disabled = false;
         }
     }
 
