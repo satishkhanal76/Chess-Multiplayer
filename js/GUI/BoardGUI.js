@@ -2,260 +2,291 @@ import { CastleCommand } from "../classes/commands/CastleCommand.js";
 import { Piece } from "../classes/pieces/Piece.js";
 import { BlockGUI } from "./BlockGUI.js";
 import { MoveCommand } from "../classes/commands/MoveCommand.js";
-
+import FileRank from "../classes/FileRank.js";
 
 export class BoardGUI {
-    #game;
-    #board;
+  #game;
+  #board;
 
+  #blocks = [];
 
-    #blocks = [];
+  #element;
 
-    #element;
+  #clickedPiece;
 
-    #clickedPiece;
+  #modal;
 
-    #modal;
+  constructor(game, modal) {
+    this.#game = game;
+    this.#board = game.getBoard();
 
-    constructor(game, modal) {
-        this.#game = game;
-        this.#board = game.getBoard();
+    this.#modal = modal;
 
-        this.#modal = modal;
+    this.#element = document.getElementById("board");
 
-        this.#element = document.getElementById("board");
+    this.#createBlocks();
+    this.updateBoard();
 
+    this.setupButtons();
+  }
 
-        this.#createBlocks();
-        this.updateBoard();
+  setupButtons() {
+    let prev = document.getElementById("previous");
+    let next = document.getElementById("next");
+    let current = document.getElementById("current");
 
-        this.setupButtons();
+    prev.addEventListener("click", () => {
+      this.#board.getCommandHandler().undoCommand();
+      this.updateBoard();
+      this.updateButtons();
+    });
+
+    next.addEventListener("click", () => {
+      this.#board.getCommandHandler().redoCommand();
+      this.updateBoard();
+      this.updateButtons();
+    });
+
+    current.addEventListener("click", () => {
+      this.#board.getCommandHandler().executeCommands();
+      this.updateBoard();
+      this.updateButtons();
+    });
+
+    this.updateButtons();
+
+    document.addEventListener("keypress", (eve) => {
+      console.log(
+        Piece.COLOUR.BLACK,
+        this.#board.isInCheckmate(Piece.COLOUR.BLACK)
+      );
+      console.log(
+        Piece.COLOUR.WHITE,
+        this.#board.isInCheckmate(Piece.COLOUR.WHITE)
+      );
+    });
+  }
+
+  clicked(block) {
+    const currentPlayer = this.#game.getCurrentPlayer();
+    let from, to;
+
+    to = {
+      col: block.getFileRank().getCol(),
+      row: block.getFileRank().getRow(),
+    };
+
+    let piece = this.#board.getPiece(to);
+
+    if (this.#clickedPiece) {
+      from = {
+        col: this.#clickedPiece.getFileRank().getCol(),
+        row: this.#clickedPiece.getFileRank().getRow(),
+      };
+
+      let fromPiece = this.#board.getPiece(from);
+      let toPiece = this.#board.getPiece(to);
+
+      if (
+        fromPiece?.getType() === Piece.TYPE.KING &&
+        toPiece?.getType() === Piece.TYPE.ROOK
+      ) {
+        currentPlayer.castle(from, to);
+      } else if (
+        fromPiece.getType() === Piece.TYPE.PAWN &&
+        fromPiece.getPromotionRow() === to.row
+      ) {
+        currentPlayer.promotePiece(
+          this.#board.getPiece(from),
+          to,
+          Piece.TYPE.QUEEN
+        );
+      } else {
+        currentPlayer.movePiece(this.#board.getPiece(from), to);
+      }
+
+      this.#clickedPiece = null;
+      this.updateBoard();
+      this.displayModalIfOver();
+      this.updateButtons();
+    } else {
+      if (!piece) return null;
+
+      this.#clickedPiece = block;
+
+      from = {
+        col: this.#clickedPiece.getFileRank().getCol(),
+        row: this.#clickedPiece.getFileRank().getRow(),
+      };
+
+      let validMoves = this.#game.getCurrentPlayer().getValidMoves(piece);
+      if (!validMoves || validMoves.length < 1) {
+        this.#clickedPiece = null;
+      } else {
+        this.showValidMoves(validMoves);
+      }
     }
+  }
 
-    setupButtons() {
-        let prev = document.getElementById("previous");
-        let next = document.getElementById("next");
-        let current = document.getElementById("current");
+  updateButtons() {
+    let prev = document.getElementById("previous");
+    let next = document.getElementById("next");
+    let current = document.getElementById("current");
+    let commandHandler = this.#board.getCommandHandler();
 
-        prev.addEventListener("click", () => {
-            this.#board.getCommandHandler().undoCommand();
-            this.updateBoard();
-            this.updateButtons();
-        })
+    let currentCommandIndex = commandHandler.getCurrentCommandIndex();
+    let commandIndex = commandHandler.getCommandIndex();
 
-        
-        next.addEventListener("click", () => {
-            this.#board.getCommandHandler().redoCommand();
-            this.updateBoard();
-            this.updateButtons();
-        })
+    prev.disabled = true;
+    next.disabled = true;
+    current.disabled = true;
 
-        current.addEventListener("click", () => {
-            this.#board.getCommandHandler().executeCommands();
-            this.updateBoard();
-            this.updateButtons();
+    if (currentCommandIndex === -1 && commandIndex === -1) return;
 
-        })
-
-        this.updateButtons();
+    if (currentCommandIndex <= commandIndex && currentCommandIndex > -1) {
+      prev.disabled = false;
     }
-
-    clicked(block) {
-
-
-        let from, to;
-
-        to = {
-            col: block.getColumn(),
-            row: block.getRow()
-        }
-
-        let piece = this.#board.getPiece(to);
-
-        if(this.#clickedPiece) {
-            
-            from = {
-                col: this.#clickedPiece.getColumn(),
-                row: this.#clickedPiece.getRow()
-            }
-
-            let fromPiece = this.#board.getPiece(from);
-            let toPiece = this.#board.getPiece(to);
-
-            if(fromPiece?.getType() === Piece.TYPE.KING && toPiece?.getType() === Piece.TYPE.ROOK) {
-                this.#game.castle(from, to);
-                
-            } else if(fromPiece.getType() === Piece.TYPE.PAWN && fromPiece.getPromotionRow() === to.row) {
-                this.#game.promotePiece(this.#board.getPiece(from), to, Piece.TYPE.QUEEN);
-
-            }else {
-                this.#game.movePiece(this.#board.getPiece(from), to);
-            }
-            
-            
-            this.#clickedPiece = null;
-            this.updateBoard();
-            this.displayModalIfOver();
-            this.updateButtons();
-        } else {
-
-            if(!piece) return null;
-            
-            this.#clickedPiece = block;
-
-
-            let validMoves = this.#game.getCurrentTurn().getValidMoves(piece);
-            if(!validMoves || validMoves.length < 1) {
-                this.#clickedPiece = null;
-            } else {
-                this.showValidMoves(validMoves);
-            }
-        }
+    if (currentCommandIndex < commandIndex) {
+      next.disabled = false;
+      current.disabled = false;
     }
+  }
 
-    updateButtons() {
-        let prev = document.getElementById("previous");
-        let next = document.getElementById("next");
-        let current = document.getElementById("current");
-        let commandHandler = this.#board.getCommandHandler();
+  /**
+   * This method is a mess- need to refactor later
+   * @returns
+   */
+  displayModalIfOver() {
+    let isGameOver = this.#game.isOver();
 
-        let currentCommandIndex = commandHandler.getCurrentCommandIndex();
-        let commandIndex = commandHandler.getCommandIndex();
+    if (!isGameOver) return null;
 
-        prev.disabled = true;
-        next.disabled = true;
-        current.disabled = true;
-        
-        if(currentCommandIndex === -1 && commandIndex === -1) return;
-        
-        if(currentCommandIndex <= commandIndex && currentCommandIndex > -1) {
-            prev.disabled = false;
-        } 
-        if(currentCommandIndex < commandIndex) {
-            next.disabled = false;
-            current.disabled = false;
-        }
+    this.#modal.style.display = "block";
+
+    let text = this.#modal.querySelector(".modal-title");
+    let display = this.#modal.querySelector(".display");
+
+    let avatar = document.createElement("div");
+    avatar.classList.add("avatar");
+    let avatar2 = document.createElement("div");
+    avatar2.classList.add("avatar");
+
+    let winner = this.#game.getWinner();
+    let winnerCharacter =
+      winner?.getColour() === Piece.COLOUR.WHITE ? "♔" : "♚";
+
+    if (winner) {
+      text.textContent = `${
+        winner?.getColour() === Piece.COLOUR.WHITE ? "White" : "Black"
+      } wins!`;
+      console.log(winner);
+      display.classList.add("win");
+      avatar.classList.add(
+        `win-${winner?.getColour() === Piece.COLOUR.WHITE ? "white" : "black"}`
+      );
+      avatar.textContent = winnerCharacter;
+      display.appendChild(avatar);
+    } else {
+      text.textContent = `Stalemate!`;
+      display.classList.add("stalemate");
+      avatar.textContent = "♔";
+      avatar2.textContent = "♚";
+      display.appendChild(avatar);
+      display.appendChild(avatar2);
     }
+  }
 
-    /**
-     * This method is a mess- need to refactor later
-     * @returns 
-     */
-    displayModalIfOver() {
-        let isGameOver = this.#game.isOver();
+  showValidMoves(validMoves) {
+    validMoves.forEach((move) => {
+      let block = this.#blocks.filter(
+        (block) =>
+          move.col == block.getFileRank().getCol() &&
+          move.row == block.getFileRank().getRow()
+      );
+      block[0].showAsValidBlock();
+    });
+  }
 
-        if(!isGameOver) return null;
-
-        this.#modal.style.display = "block";
-
-        let text = this.#modal.querySelector(".modal-title");
-        let display = this.#modal.querySelector(".display");
-
-        let avatar = document.createElement("div");
-        avatar.classList.add("avatar");
-        let avatar2 = document.createElement("div");
-        avatar2.classList.add("avatar");
-
-        let winner = this.#game.getWinner();
-        let winnerCharacter = (winner?.getColour() === Piece.COLOUR.WHITE) ? "♔": "♚";
-
-        if(winner) {
-            text.textContent = `${(winner?.getColour() === Piece.COLOUR.WHITE) ? "White": "Black"} wins!`;
-            console.log(winner)
-            display.classList.add("win");
-            avatar.classList.add(`win-${(winner?.getColour() === Piece.COLOUR.WHITE) ? "white": "black"}`);
-            avatar.textContent = winnerCharacter;
-            display.appendChild(avatar);
-        } else {
-            text.textContent = `Stalemate!`;
-            display.classList.add("stalemate");
-            avatar.textContent = "♔";
-            avatar2.textContent = "♚"
-            display.appendChild(avatar);
-            display.appendChild(avatar2);
-        }
+  showBoard() {
+    let grid = this.#board.getGrid();
+    let piece;
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[i].length; j++) {
+        piece = grid[i][j];
+        console.log(piece);
+      }
     }
+  }
 
+  #createBlocks() {
+    let grid = this.#board.getGrid();
+    let piece;
 
-    showValidMoves(validMoves) {
-        validMoves.forEach(move => {
-            let block = this.#blocks.filter(block => move.col == block.getColumn() && move.row == block.getRow());
-            block[0].showAsValidBlock();
+    let block;
+    let lastColour = Piece.COLOUR.WHITE;
+
+    for (let i = 0; i < grid.length; i++) {
+      // this.#element.append((document.createElement("span").textContent = i));
+      for (let j = 0; j < grid[i].length; j++) {
+        piece = grid[i][j];
+
+        const fileRank = new FileRank({
+          col: j,
+          row: i,
         });
+
+        block = new BlockGUI(fileRank, this, lastColour);
+
+        this.#blocks.push(block);
+
+        block.setText(piece ? piece.getCharacter() : " ");
+
+        this.#element.append(block.getElement());
+        lastColour =
+          lastColour === Piece.COLOUR.WHITE
+            ? Piece.COLOUR.BLACK
+            : Piece.COLOUR.WHITE;
+      }
+      lastColour =
+        lastColour === Piece.COLOUR.WHITE
+          ? Piece.COLOUR.BLACK
+          : Piece.COLOUR.WHITE;
     }
+  }
 
-    showBoard() {
-        let grid = this.#board.getGrid();
-        let piece;
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-            
-                piece = grid[i][j];
-                console.log(piece);
+  updateBoard() {
+    let grid = this.#board.getGrid();
+    let piece;
 
-            }
-        }
+    let block;
+
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[i].length; j++) {
+        piece = grid[i][j];
+
+        block = this.#blocks.filter(
+          (block) =>
+            block.getFileRank().getCol() == i &&
+            block.getFileRank().getRow() == j
+        );
+
+        block[0].setText(piece ? piece.getCharacter() : " ");
+        block[0].hideAsValidBlock();
+      }
     }
+  }
 
-
-    #createBlocks() {
-        let grid = this.#board.getGrid();
-        let piece;
-
-        let block;
-        let lastColour = Piece.COLOUR.WHITE;
-
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-                piece = grid[i][j];
-
-                block = new BlockGUI(j, i, this, lastColour);
-
-                this.#blocks.push(block);
-
-                block.setText((piece) ? piece.getCharacter() : " ");
-
-                this.#element.append(block.getElement());
-                lastColour  = (lastColour === Piece.COLOUR.WHITE) ? Piece.COLOUR.BLACK: Piece.COLOUR.WHITE;
-
-            }
-            lastColour  = (lastColour === Piece.COLOUR.WHITE) ? Piece.COLOUR.BLACK: Piece.COLOUR.WHITE;
-
-        }
+  showBoardOnConsole() {
+    let grid = this.#board.getGrid();
+    let piece;
+    let output = "";
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[i].length; j++) {
+        piece = grid[j][i];
+        output += piece ? piece.getCharacter() : " ";
+      }
+      output = output + "\n";
     }
-
-    updateBoard() {
-        let grid = this.#board.getGrid();
-        let piece;
-
-        let block;
-
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-                piece = grid[i][j];
-
-                block = this.#blocks.filter(block => block.getColumn() == i && block.getRow() == j);
-                
-                block[0].setText((piece) ? piece.getCharacter() : " ");
-                block[0].hideAsValidBlock();
-
-            }
-        }
-    }
-
-    showBoardOnConsole() {
-        let grid = this.#board.getGrid();
-        let piece;
-        let output = "";
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-            
-                piece = grid[j][i];
-                output += (piece) ? piece.getCharacter() : " ";
-
-            }
-            output = output + "\n";
-        }
-        console.log(output);
-    }
+    console.log(output);
+  }
 }

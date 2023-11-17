@@ -2,140 +2,158 @@ import { Board } from "./Board.js";
 import { Piece } from "./pieces/Piece.js";
 import { Player } from "./players/Player.js";
 import { PieceFactory } from "./pieces/PieceFactory.js";
+import GameValidator from "./validators/GameValidator.js";
+import CheckmateValidator from "./validators/CheckmateValidator.js";
+import StalemateValidator from "./validators/StalemateValidator.js";
+import FileRankMaker from "./FileRankMaker.js";
+import FileRank from "./FileRank.js";
 
 export class Game {
+  #board;
 
+  #players = [];
+  #currentPlayer;
+  #currentPlayerIndex;
 
-    #board;
+  #isOver = false;
 
-    #players = [];
-    #currentTurn;
-    #currentTurnIndex;
+  #winner;
 
+  #validators = [];
 
-    #isOver = false;
+  constructor() {
+    this.createBoard();
 
-    #winner;
+    this.createPlayers();
+    this.changeTurn();
 
-    constructor() {
-        
-        this.createBoard();
-        
-        this.createPlayers();
-        this.changeTurn();
+    this.resetGame();
 
-        this.resetGame();
+    this.addValidators();
+
+    this.#board.getMoveEventListener().addListener((event) => {
+      this.changeTurn();
+      this.validateGame();
+
+      const command = event.command;
+      const from = new FileRank(command.getFrom()).getFileRank();
+      const to = new FileRank(command.getTo()).getFileRank();
+
+      console.log(from, "->", to);
+    });
+  }
+
+  addValidators() {
+    this.#validators.push(new CheckmateValidator());
+    this.#validators.push(new StalemateValidator());
+  }
+
+  validateGame() {
+    for (let i = 0; i < this.#validators.length; i++) {
+      const validator = this.#validators[i];
+      validator.validate(this);
+
+      const isGameOver = validator.getIsOver();
+      if (!isGameOver) continue;
+
+      this.#isOver = true;
+      const type = validator.getType();
+
+      if (type === GameValidator.TYPES.CHECKMATE) {
+        this.#winner = this.getPreviousPlayer();
+      }
     }
+  }
 
-    resetGame() {
-        this.#isOver = false;
-        this.#winner = null;
+  resetGame() {
+    this.#isOver = false;
+    this.#winner = null;
+  }
+
+  createBoard() {
+    this.#board = new Board();
+    this.setupBoard();
+  }
+
+  setupBoard() {
+    let fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    let lines = fenString.split("/");
+
+    for (let i = 0; i < lines.length; i++) {
+      let piece, character;
+      let line = lines[i];
+
+      if (line.length == 1) continue;
+
+      for (let j = 0; j < line.length; j++) {
+        character = line.charAt(j);
+        piece = PieceFactory.getPieceFen(character);
+        this.#board.placePiece(piece, { col: j, row: i });
+      }
     }
+  }
 
-    createBoard() {
-        this.#board = new Board();
-        this.setupBoard();
+  getPlayer(colour) {
+    return this.#players.find((player) => player.getColour() === colour);
+  }
+
+  getPlayers() {
+    return this.#players;
+  }
+
+  createPlayers() {
+    this.#players.push(new Player(this.#board, Piece.COLOUR.WHITE));
+    this.#players.push(new Player(this.#board, Piece.COLOUR.BLACK));
+  }
+
+  changeTurn() {
+    if (isNaN(this.#currentPlayerIndex)) {
+      this.#currentPlayerIndex = 0;
+    } else {
+      this.#currentPlayerIndex += 1;
     }
+    if (this.#currentPlayerIndex >= this.#players.length)
+      this.#currentPlayerIndex = 0;
+    this.#currentPlayer = this.#players[this.#currentPlayerIndex];
+  }
 
-    setupBoard() {
-        let fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-        let lines = fenString.split("/");
+  checkForOver() {
+    this.#checkForStalemate();
+  }
 
-        for (let i = 0; i < lines.length; i++) {
-            let piece, character;
-            let line = lines[i];
+  #checkForStalemate() {
+    const staleMate = this.#players.find((player) => player.isInStaleMate());
+    if (!staleMate) return;
+    this.#isOver = true;
+    this.#winner = null;
+  }
 
-            if(line.length == 1) continue;
+  getCurrentPlayer() {
+    return this.#currentPlayer;
+  }
 
-            for (let j = 0; j < line.length; j++) {
-                character = line.charAt(j);
-                piece = PieceFactory.getPieceFen(character);
-                this.#board.placePiece(piece, {col: j, row: i});
-            }
+  getNextPlayer() {
+    let nextTurnIndex = this.#currentPlayerIndex + 1;
+    if (nextTurnIndex >= this.#players.length) nextTurnIndex = 0;
+    return this.#players[nextTurnIndex];
+  }
 
-        }
+  getPreviousPlayer() {
+    let previousTurnIndex = this.#currentPlayerIndex - 1;
+    if (previousTurnIndex < 0) previousTurnIndex = 0;
+    return this.#players[previousTurnIndex];
+  }
 
-    }
+  getBoard() {
+    return this.#board;
+  }
 
-    getPlayer(colour) {
-        return this.#players.find(player => player.getColour() === colour);
-    }
+  getWinner() {
+    return this.#winner;
+  }
 
-    createPlayers() {
-        this.#players.push(new Player(this.#board, Piece.COLOUR.WHITE));
-        this.#players.push(new Player(this.#board, Piece.COLOUR.BLACK));
-    }
-
-    changeTurn() {
-        if(isNaN(this.#currentTurnIndex)) {
-            this.#currentTurnIndex = 0;
-        } else {
-            this.#currentTurnIndex += 1;
-        }
-        if(this.#currentTurnIndex >= this.#players.length) this.#currentTurnIndex = 0;
-        this.#currentTurn = this.#players[this.#currentTurnIndex];
-    }
-
-    checkForOver() {
-        this.#checkForStalemate();
-        this.#checkForCheckmate();
-    }
-    
-    #checkForCheckmate() {
-        let leftPlayer = this.#players.filter(player => !player.isInCheckMate());
-        if(leftPlayer.length == 1) {
-            this.#isOver = true;
-            this.#winner = leftPlayer[0];
-        }
-    }
-
-    #checkForStalemate() {
-        const staleMate = this.#players.find(player => player.isInStaleMate());
-        if(!staleMate) return;
-        this.#isOver = true;
-        this.#winner = null;
-    }
-
-    movePiece(piece, at) {
-        if(this.#currentTurn.movePiece(piece, at)) {
-            this.changeTurn();
-        };
-    }
-
-    castle(kingPos, rookPos) {
-        if(this.#currentTurn.castle(kingPos, rookPos)) {
-            this.changeTurn();
-        };
-    }
-
-    promotePiece(piece, at, promotionPieceType) {
-        if(!piece) return;
-        if(this.#currentTurn.promotePiece(piece, at, promotionPieceType)) {
-            this.changeTurn();
-        };
-    }
-
-    getCurrentTurn() {
-        return this.#currentTurn;
-    }
-
-    getNextTurn() {
-        let nextTurnIndex = this.#currentTurnIndex + 1;
-        if(nextTurnIndex >= this.#players.length) nextTurnIndex = 0;
-        return this.#players[nextTurnIndex];
-    }
-
-    getBoard() {
-        return this.#board;
-    }
-
-    getWinner() {
-        return this.#winner;
-    }
-
-    isOver() {
-        this.checkForOver();
-        return this.#isOver;
-    }
-
+  isOver() {
+    this.checkForOver();
+    return this.#isOver;
+  }
 }

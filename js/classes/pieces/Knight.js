@@ -2,12 +2,24 @@ import { Movement } from "./Movement.js";
 import { Piece } from "./Piece.js";
 
 export class Knight extends Piece {
-    constructor(piece, colour) {
-        super(piece.type, piece.character, colour);
-        this.configureMoves();
-    }
+  constructor(piece, colour) {
+    super(piece.type, piece.character, colour);
+    this.configureMoves();
+  }
 
-    configureMoves() {
-        this.addMoves(Movement.getKnightMovement);
+  configureMoves() {
+    this.addMoves(Movement.getKnightMovement);
+  }
+
+  checkPathForValidSpots(board, spots) {
+    for (let i = spots.length - 1; i >= 0; i--) {
+      let spot = spots[i];
+      let pieceAtTheSpot = board.getPiece(spot);
+
+      if (!pieceAtTheSpot) continue;
+
+      if (pieceAtTheSpot.getColour() == this.getColour()) spots.splice(i, 1);
     }
+    return spots;
+  }
 }

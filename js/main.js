@@ -2,10 +2,9 @@ import { Game } from "./classes/Game.js";
 
 import { BoardGUI } from "./GUI/BoardGUI.js";
 
+const game = new Game();
 
-let game = new Game();
-
-let modal = document.getElementById("modal");
+const modal = document.getElementById("modal");
 modal.style.display = "none";
 
-let boardGUI = new BoardGUI(game, modal);
+const boardGUI = new BoardGUI(game, modal);

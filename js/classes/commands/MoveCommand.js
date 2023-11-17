@@ -1,95 +1,80 @@
 import { Command } from "./Command.js";
 
 export class MoveCommand extends Command {
+  #board;
 
-    #player;
-    #board;
+  #from;
+  #to;
 
-    #from;
-    #to;
+  #isValidCommand;
 
-    #isValidCommand;
+  //keeps track of the piece that this move captures if any
+  #movingPiece;
+  #takingPiece;
 
-    //keeps track of the piece that this move captures if any
-    #movingPiece;
-    #takingPiece;
+  #executed;
 
-    #executed;
+  constructor(board, from, to) {
+    super(Command.TYPES.MOVE_COMMAND);
 
-    constructor(player, board, from, to) {
-        super();
+    this.#board = board;
+    this.#from = from;
+    this.#to = to;
 
-        this.#player = player;
-        this.#board = board;
-        this.#from = from;
-        this.#to = to;
+    this.#movingPiece = null;
+    this.#takingPiece = null;
 
-        this.#movingPiece = null;
-        this.#takingPiece = null;
+    this.#isValidCommand = true;
+    this.#executed = false;
+  }
 
-        this.#isValidCommand = true;
-        this.#executed = false;
+  execute() {
+    this.#executed = true;
+
+    this.#movingPiece = this.#board.getPiece(this.#from);
+    this.#takingPiece = this.#board.getPiece(this.#to);
+
+    if (!this.#movingPiece) {
+      return (this.#isValidCommand = false);
     }
 
-    execute() {
-        this.#executed = true;
-
-        this.#movingPiece = this.#board.getPiece(this.#from);
-        this.#takingPiece = this.#board.getPiece(this.#to);
-
-        if(!this.#movingPiece) {
-            return this.#isValidCommand = false;
-        };
-
-        if(!this.#movingPiece.isValidMove(this.#player, this, this.#board)) {
-            return this.#isValidCommand = false;
-        };
-
-        //remove pieces from their place
-        this.#board.removePiece(this.#from);
-        this.#board.removePiece(this.#to);
-
-        //place the moving piece to new location
-        this.#board.placePiece(this.#movingPiece, this.#to);
-
-        this.#movingPiece.moved(this.#from, this.#to);
-
-        return this.#isValidCommand = true;
+    if (!this.#board.isValidMove(this.#from, this.#to)) {
+      return (this.#isValidCommand = false);
     }
 
+    this.#board.movePiece(this.#movingPiece, this.#to);
+    this.#movingPiece.moved(this.#from, this.#to);
 
-    undo() {
-        this.#board.removePiece(this.#to);
-        this.#board.removePiece(this.#from);
+    this.#board.getMoveEventListener().emit({
+      command: this,
+    });
 
-        this.#board.placePiece(this.#takingPiece, this.#to);
-        this.#board.placePiece(this.#movingPiece, this.#from);
+    return (this.#isValidCommand = true);
+  }
 
-    }
+  undo() {
+    this.#board.movePiece(this.#movingPiece, this.#from);
 
-    redo() {
-        //remove pieces from their place
-        this.#board.removePiece(this.#from);
-        this.#board.removePiece(this.#to);
+    this.#board.placePiece(this.#takingPiece, this.#to);
+  }
 
-        //place the moving piece to new location
-        this.#board.placePiece(this.#movingPiece, this.#to);
-    }
+  redo() {
+    this.#board.movePiece(this.#movingPiece, this.#to);
+  }
 
+  getFrom() {
+    return this.#from;
+  }
 
-    getFrom() {
-        return this.#from;
-    }
+  getTo() {
+    return this.#to;
+  }
 
-    getTo() {
-        return this.#to;
-    }
+  getTakingPiece() {
+    return this.#takingPiece;
+  }
 
-    getTakingPiece() {
-        return this.#takingPiece;
-    }
-
-    isAValidCommand() {
-        return this.#isValidCommand;
-    }
+  isAValidCommand() {
+    return this.#isValidCommand;
+  }
 }

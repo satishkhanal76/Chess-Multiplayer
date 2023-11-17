@@ -1,66 +1,55 @@
 export class BlockGUI {
+  #fileRank;
 
-    #column;
-    #row;
+  #element;
 
-    #element;
+  #boardGUI;
 
-    #boardGUI;
+  #colour;
 
-    #colour;
+  constructor(fileRank, boardGUI, colour) {
+    this.#fileRank = fileRank;
 
-    constructor(col, row, boardGUI, colour) {
-        this.#column = col;
-        this.#row = row;
+    this.#boardGUI = boardGUI;
 
-        this.#boardGUI = boardGUI;
+    this.#colour = colour;
 
-        this.#colour = colour;
+    this.createElement();
+    this.addEventListeners();
+  }
 
-        this.createElement();
-        this.addEventListeners();
-    }
+  showAsValidBlock() {
+    this.#element.classList.add("valid-spot");
+  }
 
-    showAsValidBlock() {
-        this.#element.classList.add("valid-spot");
-    }
+  hideAsValidBlock() {
+    this.#element.classList.remove("valid-spot");
+  }
 
-    hideAsValidBlock() {
-        this.#element.classList.remove("valid-spot");
+  createElement() {
+    this.#element = document.createElement("div");
+    this.#element.classList.add("block");
+    this.#element.classList.add(this.#colour);
 
-    }
+    this.#element.dataset.col = this.#fileRank.getCol();
+    this.#element.dataset.row = this.#fileRank.getRow();
+    this.setText(" ");
+  }
 
+  addEventListeners() {
+    this.#element.addEventListener("click", (eve) => {
+      this.#boardGUI.clicked(this);
+    });
+  }
 
-    createElement() {
-        this.#element = document.createElement("div");
-        this.#element.classList.add("block");
-        this.#element.classList.add(this.#colour);
-        
-        this.#element.dataset.col = this.#column;
-        this.#element.dataset.row = this.#row;
-        this.setText(" ");
-    }
+  getFileRank() {
+    return this.#fileRank;
+  }
+  setText(text) {
+    this.#element.textContent = text;
+  }
 
-    addEventListeners() {
-        this.#element.addEventListener("click", eve => {
-            this.#boardGUI.clicked(this);
-        })
-    }
-
-    getColumn() {
-        return this.#column;
-    }
-
-    getRow() {
-        return this.#row;
-    }
-
-    setText(text) {
-        this.#element.textContent = text;
-    }
-
-
-    getElement() {
-        return this.#element;
-    }
+  getElement() {
+    return this.#element;
+  }
 }

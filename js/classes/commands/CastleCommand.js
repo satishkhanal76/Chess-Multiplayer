@@ -1,73 +1,59 @@
-import { Piece } from "../pieces/Piece.js";
 import { Command } from "./Command.js";
 
 export class CastleCommand extends Command {
+  #board;
+  #kingPosition;
+  #rookPosition;
 
-    #board;
-    #kingPosition;
-    #rookPosition;
+  #kingNewPosition;
+  #rookNewPosition;
 
-    #kingNewPosition;
-    #rookNewPosition;
+  #king;
+  #rook;
 
-    #king;
-    #rook;
+  constructor(board, kingPosition, rookPosition) {
+    super(Command.TYPES.CASTLE_COMMAND);
 
-    constructor(board, kingPosition, rookPosition) {
-        super();
+    this.#board = board;
+    this.#kingPosition = kingPosition;
+    this.#rookPosition = rookPosition;
 
-        this.#board = board;
-        this.#kingPosition = kingPosition;
-        this.#rookPosition = rookPosition;
+    this.#kingNewPosition = null;
+    this.#rookNewPosition = null;
+  }
 
-        this.#kingNewPosition = null;
-        this.#rookNewPosition = null;
-    }
+  execute() {
+    this.#king = this.#board.getPiece(this.#kingPosition);
+    this.#rook = this.#board.getPiece(this.#rookPosition);
 
+    let pathToKing = this.#rook.pathToKing(this.#board);
 
-    execute() {
+    let kingNewIndex = pathToKing.length - 2;
+    let rookNewIndex = kingNewIndex + 1;
 
-        this.#king = this.#board.getPiece(this.#kingPosition);
-        this.#rook = this.#board.getPiece(this.#rookPosition);
-    
+    this.#kingNewPosition = pathToKing[kingNewIndex];
+    this.#rookNewPosition = pathToKing[rookNewIndex];
 
+    this.#board.movePiece(this.#king, this.#kingNewPosition);
+    this.#board.movePiece(this.#rook, this.#rookNewPosition);
 
-        let pathToKing = this.#rook.pathToKing(this.#board);
-        
-        let kingNewIndex = pathToKing.length - 2;
-        let rookNewIndex = kingNewIndex + 1;
+    this.#king.moved(this.#kingPosition, this.#kingNewPosition);
+    this.#king.moved(this.#rookPosition, this.#rookNewPosition);
 
-        this.#kingNewPosition = pathToKing[kingNewIndex];
-        this.#rookNewPosition = pathToKing[rookNewIndex];
+    this.#board.getMoveEventListener().emit({
+      command: this,
+    });
 
+    return true;
+  }
 
-        this.#board.removePiece(this.#kingPosition);
-        this.#board.removePiece(this.#rookPosition);
+  undo() {
+    this.#board.movePiece(this.#king, this.#kingPosition);
+    this.#board.movePiece(this.#rook, this.#rookPosition);
+  }
 
-        this.#board.placePiece(this.#king, this.#kingNewPosition);
-        this.#board.placePiece(this.#rook, this.#rookNewPosition);
-
-        this.#king.moved(this.#kingPosition, this.#kingNewPosition);
-        this.#king.moved(this.#rookPosition, this.#rookNewPosition);
-
-        return true;
-    }
-
-
-    undo() {
-        this.#board.removePiece(this.#kingNewPosition);
-        this.#board.removePiece(this.#rookNewPosition);
-
-        this.#board.placePiece(this.#king, this.#kingPosition);
-        this.#board.placePiece(this.#rook, this.#rookPosition);
-    }
-
-    redo() {
-        this.#board.removePiece(this.#kingPosition);
-        this.#board.removePiece(this.#rookPosition);
-
-        this.#board.placePiece(this.#king, this.#kingNewPosition);
-        this.#board.placePiece(this.#rook, this.#rookNewPosition);
-    }
-
+  redo() {
+    this.#board.movePiece(this.#king, this.#kingNewPosition);
+    this.#board.movePiece(this.#rook, this.#rookNewPosition);
+  }
 }
