@@ -1,7 +1,5 @@
-import { CastleCommand } from "../classes/commands/CastleCommand.js";
 import { Piece } from "../classes/pieces/Piece.js";
 import { BlockGUI } from "./BlockGUI.js";
-import { MoveCommand } from "../classes/commands/MoveCommand.js";
 import FileRank from "../classes/FileRank.js";
 
 export class BoardGUI {
@@ -56,14 +54,7 @@ export class BoardGUI {
     this.updateButtons();
 
     document.addEventListener("keypress", (eve) => {
-      console.log(
-        Piece.COLOUR.BLACK,
-        this.#board.isInCheckmate(Piece.COLOUR.BLACK)
-      );
-      console.log(
-        Piece.COLOUR.WHITE,
-        this.#board.isInCheckmate(Piece.COLOUR.WHITE)
-      );
+      this.showBoardOnConsole();
     });
   }
 
@@ -282,8 +273,12 @@ export class BoardGUI {
     let output = "";
     for (let i = 0; i < grid.length; i++) {
       for (let j = 0; j < grid[i].length; j++) {
+        const block = this.#blocks.find(
+          (b) =>
+            b.getFileRank().getCol() === j && b.getFileRank().getRow() === i
+        );
         piece = grid[j][i];
-        output += piece ? piece.getCharacter() : " ";
+        output += piece ? piece.getCharacter() : "  ";
       }
       output = output + "\n";
     }
