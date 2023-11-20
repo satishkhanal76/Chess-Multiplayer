@@ -1,6 +1,7 @@
 import { Piece } from "../classes/pieces/Piece.js";
 import { BlockGUI } from "./BlockGUI.js";
 import FileRankFactory from "../classes/FileRankFactory.js";
+import { Command } from "../classes/commands/Command.js";
 
 export class BoardGUI {
   #game;
@@ -13,6 +14,8 @@ export class BoardGUI {
   #clickedPiece;
 
   #modal;
+
+  #animationTime = 250;
 
   constructor(game, modal) {
     this.#game = game;
@@ -33,21 +36,29 @@ export class BoardGUI {
     let next = document.getElementById("next");
     let current = document.getElementById("current");
 
-    prev.addEventListener("click", () => {
-      this.#board.getCommandHandler().undoCommand();
-      this.updateBoard();
+    prev.addEventListener("click", async () => {
+      const command = this.#board.getCommandHandler().undoCommand();
+
+      await this.animateCommand(command, true);
+      //animation updates the board
+      // this.updateBoard();
       this.updateButtons();
     });
 
-    next.addEventListener("click", () => {
-      this.#board.getCommandHandler().redoCommand();
-      this.updateBoard();
+    next.addEventListener("click", async () => {
+      const command = this.#board.getCommandHandler().redoCommand();
+
+      await this.animateCommand(command);
+
+      // this.updateBoard();
       this.updateButtons();
     });
 
-    current.addEventListener("click", () => {
-      this.#board.getCommandHandler().executeCommands();
-      this.updateBoard();
+    current.addEventListener("click", async () => {
+      const commands = this.#board.getCommandHandler().executeCommands();
+
+      Promise.all(commands.map((command) => this.animateCommand(command)));
+      // this.updateBoard();
       this.updateButtons();
     });
 
@@ -62,6 +73,48 @@ export class BoardGUI {
     });
   }
 
+  async animateCommand(command, undo = false) {
+    return new Promise(async (resolve, reject) => {
+      if (undo) {
+        if (command.getType() === Command.TYPES.CASTLE_COMMAND) {
+          this.animateCasstleCommand(
+            command,
+            this.getBlock(command.getKingNewPosition()),
+            this.getBlock(command.getRookNewPosition()),
+            true
+          );
+        } else {
+          this.animateMoveCommand(
+            command,
+            this.getBlock(command.getTo()),
+            true
+          );
+        }
+      } else {
+        if (command.getType() === Command.TYPES.CASTLE_COMMAND) {
+          this.animateCasstleCommand(
+            command,
+            this.getBlock(command.getKingPosition()),
+            this.getBlock(command.getRookPosition())
+          );
+        } else {
+          this.animateMoveCommand(command, this.getBlock(command.getFrom()));
+        }
+      }
+      setTimeout(() => {
+        resolve("RESOLVED");
+      }, this.#animationTime);
+    });
+  }
+
+  getBlock(fileRank) {
+    return this.#blocks.find(
+      (block) =>
+        block.getFileRank().getCol() === fileRank.getCol() &&
+        block.getFileRank().getRow() === fileRank.getRow()
+    );
+  }
+
   clicked(block) {
     const currentPlayer = this.#game.getCurrentPlayer();
 
@@ -71,43 +124,45 @@ export class BoardGUI {
       let fromPiece = this.#board.getPiece(this.#clickedPiece.getFileRank());
       let toPiece = this.#board.getPiece(block.getFileRank());
 
-      const from = {
+      let from = {
         col: this.#clickedPiece.getFileRank().getCol(),
         row: this.#clickedPiece.getFileRank().getRow(),
       };
-      const to = {
+      let to = {
         col: block.getFileRank().getCol(),
         row: block.getFileRank().getRow(),
       };
+
+      let command;
 
       if (
         fromPiece?.getType() === Piece.TYPE.KING &&
         toPiece?.getType() === Piece.TYPE.ROOK
       ) {
-        currentPlayer.castle(
+        command = currentPlayer.castle(
           this.#clickedPiece.getFileRank(),
           block.getFileRank()
         );
+
+        this.animateCasstleCommand(command, this.#clickedPiece, block);
       } else if (
         fromPiece.getType() === Piece.TYPE.PAWN &&
         fromPiece.getPromotionRow() === block.getFileRank().getRow()
       ) {
-        currentPlayer.promotePiece(
+        command = currentPlayer.promotePiece(
           this.#board.getPiece(this.#clickedPiece.getFileRank()),
           block.getFileRank(),
           Piece.TYPE.QUEEN
         );
-        this.removeValidSoptsMark();
-        this.animateBlock(from, to, this.#clickedPiece);
+        this.animateMoveCommand(command, this.#clickedPiece);
       } else {
-        currentPlayer.movePiece(
+        command = currentPlayer.movePiece(
           this.#board.getPiece(this.#clickedPiece.getFileRank()),
           block.getFileRank()
         );
+        this.animateMoveCommand(command, this.#clickedPiece);
       }
-
       this.removeValidSoptsMark();
-      this.animateBlock(from, to, this.#clickedPiece);
 
       this.displayModalIfOver();
       this.updateButtons();
@@ -126,7 +181,53 @@ export class BoardGUI {
     }
   }
 
-  updateButtons() {
+  animateMoveCommand(command, piece, undo = false) {
+    const from = {
+      col: command.getFrom().getCol(),
+      row: command.getFrom().getRow(),
+    };
+    const to = {
+      col: command.getTo().getCol(),
+      row: command.getTo().getRow(),
+    };
+    if (!command.isAValidCommand()) return null;
+    if (undo) {
+      this.animateBlock(to, from, piece);
+    } else {
+      this.animateBlock(from, to, piece);
+    }
+  }
+
+  animateCasstleCommand(command, kingBlock, rookBlock, undo = false) {
+    const fromKing = {
+      col: command.getKingPosition().getCol(),
+      row: command.getKingPosition().getRow(),
+    };
+    const toKing = {
+      col: command.getKingNewPosition().getCol(),
+      row: command.getKingNewPosition().getRow(),
+    };
+    const fromRook = {
+      col: command.getRookPosition().getCol(),
+      row: command.getRookPosition().getRow(),
+    };
+    const toRook = {
+      col: command.getRookNewPosition().getCol(),
+      row: command.getRookNewPosition().getRow(),
+    };
+    if (undo) {
+      Promise.all([
+        this.animateBlock(toKing, fromKing, kingBlock),
+        this.animateBlock(toRook, fromRook, rookBlock),
+      ]);
+    } else {
+      Promise.all([
+        this.animateBlock(fromKing, toKing, kingBlock),
+        this.animateBlock(fromRook, toRook, rookBlock),
+      ]);
+    }
+  }
+  updateButtons(disable = false) {
     let prev = document.getElementById("previous");
     let next = document.getElementById("next");
     let current = document.getElementById("current");
@@ -145,6 +246,12 @@ export class BoardGUI {
       prev.disabled = false;
     }
     if (currentCommandIndex < commandIndex) {
+      next.disabled = false;
+      current.disabled = false;
+    }
+
+    if (disable) {
+      prev.disabled = false;
       next.disabled = false;
       current.disabled = false;
     }
@@ -273,20 +380,17 @@ export class BoardGUI {
       row: to.row * element.offsetHeight,
     };
 
-    // element.style.left = `${offsetFrom.col}px`;
-    // element.style.top = `${offsetFrom.row}px`;
-
     element.style.setProperty("--from-col", offsetFrom.col + "px");
     element.style.setProperty("--from-row", offsetFrom.row + "px");
     element.style.setProperty("--to-col", offsetTo.col + "px");
     element.style.setProperty("--to-row", offsetTo.row + "px");
 
+    this.removeValidSoptsMark();
     block.setText(" ");
-    element.style.animation =
-      "animate-move 0.3s cubic-bezier( 0.215, 0.61, 0.355, 1 ) ";
 
-    // element.style.left = `${offsetTo.col}px`;
-    // element.style.top = `${offsetTo.row}px`;
+    element.style.animation = `animate-move ${
+      this.#animationTime
+    }ms cubic-bezier( 0.215, 0.61, 0.355, 1 )`;
   }
 
   createBlock(fileRank, lastColour) {
@@ -304,14 +408,21 @@ export class BoardGUI {
       for (let j = 0; j < rowLenghth; j++) {
         piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
 
-        block = this.#blocks.filter(
-          (block) =>
-            block.getFileRank().getCol() == i &&
-            block.getFileRank().getRow() == j
-        );
+        block = this.#blocks
+          .filter(
+            (block) =>
+              block.getFileRank().getCol() == i &&
+              block.getFileRank().getRow() == j
+          )
+          .pop();
 
-        block[0].setText(piece ? piece.getCharacter() : " ");
-        block[0].hideAsValidBlock();
+        block.setText(piece ? piece.getCharacter() : " ");
+        block.hideAsValidBlock();
+        if (!piece) continue;
+        if (piece.getType() === Piece.TYPE.KING)
+          this.#board.isKingInCheck(piece.getColour())
+            ? block.addCheckStyle()
+            : block.removeCheckStyle();
       }
     }
   }

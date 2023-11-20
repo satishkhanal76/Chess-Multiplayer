@@ -75,9 +75,11 @@ export class CommandHandler {
    * Executes all commands from currentCommandIndex to commandIndex at once
    */
   executeCommands() {
+    const executedCommands = [];
     for (let i = this.#currentCommandIndex; i <= this.#commandIndex; i++) {
-      this.redoCommand();
+      executedCommands.push(this.redoCommand());
     }
+    return executedCommands;
   }
 
   executeNextCommand() {
@@ -115,9 +117,11 @@ export class CommandHandler {
       return null;
     }
 
-    this.#commands[this.#currentCommandIndex].undo();
+    const command = this.#commands[this.#currentCommandIndex];
+    command.undo();
 
     this.#decrementCurrentCommandIndex();
+    return command;
   }
 
   redoCommand() {
@@ -127,11 +131,14 @@ export class CommandHandler {
       this.#currentCommandIndex = this.#commandIndex;
       return null;
     }
-    if (this.#commands[this.#currentCommandIndex].isExecuted()) {
-      this.#commands[this.#currentCommandIndex].redo();
+    const command = this.#commands[this.#currentCommandIndex];
+    command.undo();
+    if (command.isExecuted()) {
+      command.redo();
     } else {
-      this.#commands[this.#currentCommandIndex].execute();
+      command.execute();
     }
+    return command;
   }
   getCurrentCommandIndex() {
     return this.#currentCommandIndex;

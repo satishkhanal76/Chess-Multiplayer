@@ -66,7 +66,7 @@ export class Player {
       this.#takenPieces.push(takenPiece);
     }
 
-    return command.isAValidCommand();
+    return command;
   }
 
   promotePiece(piece, to, pieceType) {
@@ -88,7 +88,7 @@ export class Player {
       this.#takenPieces.push(takenPiece);
     }
 
-    return command.isAValidCommand();
+    return command;
   }
 
   castle(kingPos, rookPos) {
@@ -106,7 +106,7 @@ export class Player {
     this.#board.getCommandHandler().addCommand(command);
     this.#board.getCommandHandler().executeNextCommand();
 
-    return true;
+    return command;
   }
 
   /**

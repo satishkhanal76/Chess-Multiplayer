@@ -64,4 +64,12 @@ export class BlockGUI {
   getColour() {
     return this.#colour;
   }
+
+  addCheckStyle() {
+    this.#element.classList.add("incheck");
+  }
+
+  removeCheckStyle() {
+    this.#element.classList.remove("incheck");
+  }
 }

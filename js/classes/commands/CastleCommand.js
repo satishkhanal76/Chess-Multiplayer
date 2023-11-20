@@ -70,4 +70,20 @@ export class CastleCommand extends Command {
       command: this,
     });
   }
+
+  getKingPosition() {
+    return this.#kingPosition;
+  }
+
+  getRookPosition() {
+    return this.#rookPosition;
+  }
+
+  getKingNewPosition() {
+    return this.#kingNewPosition;
+  }
+
+  getRookNewPosition() {
+    return this.#rookNewPosition;
+  }
 }

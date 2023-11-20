@@ -66,6 +66,8 @@ main {
   width: var(--block-width);
   height: var(--block-height);
 
+  font-weight: 500;
+
   align-items: center;
   justify-content: center;
   font-size: 2em;
@@ -162,6 +164,10 @@ main {
   --to-row: 100px;
 
   animation: animate-move 2s forwards;
+}
+
+.block.incheck {
+  background-color: rgb(241, 91, 91);
 }
 
 @media only screen and (max-width: 600px) {
