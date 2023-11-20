@@ -7,15 +7,22 @@ export class BlockGUI {
 
   #colour;
 
+  #text;
+
   constructor(fileRank, boardGUI, colour) {
     this.#fileRank = fileRank;
 
     this.#boardGUI = boardGUI;
 
     this.#colour = colour;
+    this.#text = "";
 
     this.createElement();
     this.addEventListeners();
+  }
+
+  getText() {
+    return this.#text;
   }
 
   showAsValidBlock() {
@@ -46,10 +53,15 @@ export class BlockGUI {
     return this.#fileRank;
   }
   setText(text) {
-    this.#element.textContent = text;
+    this.#text = text;
+    this.#element.textContent = this.#text;
   }
 
   getElement() {
     return this.#element;
+  }
+
+  getColour() {
+    return this.#colour;
   }
 }

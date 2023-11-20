@@ -71,6 +71,15 @@ export class BoardGUI {
       let fromPiece = this.#board.getPiece(this.#clickedPiece.getFileRank());
       let toPiece = this.#board.getPiece(block.getFileRank());
 
+      const from = {
+        col: this.#clickedPiece.getFileRank().getCol(),
+        row: this.#clickedPiece.getFileRank().getRow(),
+      };
+      const to = {
+        col: block.getFileRank().getCol(),
+        row: block.getFileRank().getRow(),
+      };
+
       if (
         fromPiece?.getType() === Piece.TYPE.KING &&
         toPiece?.getType() === Piece.TYPE.ROOK
@@ -88,6 +97,8 @@ export class BoardGUI {
           block.getFileRank(),
           Piece.TYPE.QUEEN
         );
+        this.removeValidSoptsMark();
+        this.animateBlock(from, to, this.#clickedPiece);
       } else {
         currentPlayer.movePiece(
           this.#board.getPiece(this.#clickedPiece.getFileRank()),
@@ -95,10 +106,12 @@ export class BoardGUI {
         );
       }
 
-      this.#clickedPiece = null;
-      this.updateBoard();
+      this.removeValidSoptsMark();
+      this.animateBlock(from, to, this.#clickedPiece);
+
       this.displayModalIfOver();
       this.updateButtons();
+      this.#clickedPiece = null;
     } else {
       if (!piece) return null;
 
@@ -218,7 +231,7 @@ export class BoardGUI {
 
         const fileRank = FileRankFactory.getFileRank(j, i);
 
-        block = new BlockGUI(fileRank, this, lastColour);
+        block = this.createBlock(fileRank, lastColour);
 
         this.#blocks.push(block);
 
@@ -235,6 +248,49 @@ export class BoardGUI {
           ? Piece.COLOUR.BLACK
           : Piece.COLOUR.WHITE;
     }
+  }
+
+  animateBlock(from, to, block) {
+    const newBlock = new BlockGUI(block.getFileRank(), this);
+
+    newBlock.setText(block.getText());
+    const element = newBlock.getElement();
+    element.style.position = "absolute";
+
+    element.addEventListener("animationend", (eve) => {
+      element.remove();
+      this.updateBoard();
+    });
+
+    this.#element.append(element);
+
+    const offsetFrom = {
+      col: from.col * element.offsetWidth,
+      row: from.row * element.offsetHeight,
+    };
+    const offsetTo = {
+      col: to.col * element.offsetWidth,
+      row: to.row * element.offsetHeight,
+    };
+
+    // element.style.left = `${offsetFrom.col}px`;
+    // element.style.top = `${offsetFrom.row}px`;
+
+    element.style.setProperty("--from-col", offsetFrom.col + "px");
+    element.style.setProperty("--from-row", offsetFrom.row + "px");
+    element.style.setProperty("--to-col", offsetTo.col + "px");
+    element.style.setProperty("--to-row", offsetTo.row + "px");
+
+    block.setText(" ");
+    element.style.animation =
+      "animate-move 0.3s cubic-bezier( 0.215, 0.61, 0.355, 1 ) ";
+
+    // element.style.left = `${offsetTo.col}px`;
+    // element.style.top = `${offsetTo.row}px`;
+  }
+
+  createBlock(fileRank, lastColour) {
+    return new BlockGUI(fileRank, this, lastColour);
   }
 
   updateBoard() {
@@ -255,6 +311,28 @@ export class BoardGUI {
         );
 
         block[0].setText(piece ? piece.getCharacter() : " ");
+        block[0].hideAsValidBlock();
+      }
+    }
+  }
+
+  removeValidSoptsMark() {
+    const columnLength = this.#board.getColumn();
+    const rowLenghth = this.#board.getRow();
+    let piece;
+
+    let block;
+
+    for (let i = 0; i < columnLength; i++) {
+      for (let j = 0; j < rowLenghth; j++) {
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
+
+        block = this.#blocks.filter(
+          (block) =>
+            block.getFileRank().getCol() == i &&
+            block.getFileRank().getRow() == j
+        );
+
         block[0].hideAsValidBlock();
       }
     }

@@ -154,6 +154,16 @@ main {
   color: white;
 }
 
+.animation-block {
+  --from-col: 0px;
+  --from-row: 0;
+
+  --to-col: 100px;
+  --to-row: 100px;
+
+  animation: animate-move 2s forwards;
+}
+
 @media only screen and (max-width: 600px) {
   .board {
     --block-width: 45px;
@@ -171,5 +181,17 @@ main {
 @media only screen and (max-width: 350px) {
   .modal .display.stalemate {
     font-size: 2em;
+  }
+}
+
+@keyframes animate-move {
+  from {
+    top: var(--from-row);
+    left: var(--from-col);
+  }
+
+  to {
+    top: var(--to-row);
+    left: var(--to-col);
   }
 }

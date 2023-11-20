@@ -14,8 +14,8 @@ export default class MoveValidator {
   }
 
   addAllValidators() {
-    this.addValidator(new DefaultMoveValidator(this.#board));
-    this.addValidator(new EnPassantValidator(this.#board));
+    this.addValidator(new DefaultMoveValidator(this.#board)); //basic movements of all pieces
+    this.addValidator(new EnPassantValidator(this.#board)); // adds en passant to the game
   }
 
   addValidator(validator) {

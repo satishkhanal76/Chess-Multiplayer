@@ -18,7 +18,7 @@ export default class EnPassantValidator extends ParentMoveValidator {
 
     // En passant Logic
 
-    //Might think to get the current command but the enpassant command has already been added so get the previous command
+    // previous command(current command in the command handler) is the latest move made in the game
     const previousCommand = board.getCommandHandler().getCurrentCommand();
 
     // previous commad is not a move or does not exists
