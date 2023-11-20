@@ -28,9 +28,47 @@ export class CommandHandler {
     this.#incrementCurrentCommandIndex();
   }
 
-  removeCommand() {
-    this.#commands.pop();
+  /**
+   * Removes a command
+   * (Executes all the commands in the stack so if the pointer is not on the top command it will execute to the top before removing)
+   * @param {*} command
+   * @returns
+   */
+  removeCommand(command) {
+    const commandIndex = this.#commands.findIndex((c) => c === command);
+
+    if (commandIndex < 0) return null;
+
+    this.executeCommands();
+
+    const splicedCommand = this.#commands.splice(commandIndex, 1).pop();
+
+    //undo the command before removing it
+    splicedCommand.undo();
+
     this.#decrementCommandIndex();
+
+    if (this.#currentCommandIndex > this.#commandIndex) {
+      this.#currentCommandIndex = this.#commandIndex;
+    }
+
+    return splicedCommand;
+  }
+
+  pop() {
+    if (this.#commands.length <= 0) return null; //can't pop
+
+    const popedCommand = this.#commands.pop();
+
+    //undo the command before removing it
+    popedCommand.undo();
+
+    this.#decrementCommandIndex();
+
+    if (this.#currentCommandIndex > this.#commandIndex) {
+      this.#currentCommandIndex = this.#commandIndex;
+    }
+    return popedCommand;
   }
 
   /**
@@ -89,7 +127,11 @@ export class CommandHandler {
       this.#currentCommandIndex = this.#commandIndex;
       return null;
     }
-    this.#commands[this.#currentCommandIndex].redo();
+    if (this.#commands[this.#currentCommandIndex].isExecuted()) {
+      this.#commands[this.#currentCommandIndex].redo();
+    } else {
+      this.#commands[this.#currentCommandIndex].execute();
+    }
   }
   getCurrentCommandIndex() {
     return this.#currentCommandIndex;
@@ -97,5 +139,28 @@ export class CommandHandler {
 
   getCommandIndex() {
     return this.#commandIndex;
+  }
+
+  /**
+   * Gets the last command on the command stack
+   * @returns command
+   */
+  getLatestCommand() {
+    return this.#commands[this.#commandIndex];
+  }
+
+  getCurrentCommand() {
+    return this.#commands[this.#currentCommandIndex];
+  }
+
+  getPreviousCommand() {
+    const previousCommandIndex = this.#currentCommandIndex - 1;
+    if (previousCommandIndex < 0) return null;
+
+    return this.#commands[previousCommandIndex];
+  }
+
+  emitCommand() {
+    this.getCurrentCommand()?.emit();
   }
 }

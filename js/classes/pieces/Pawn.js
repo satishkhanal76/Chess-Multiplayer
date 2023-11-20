@@ -1,12 +1,18 @@
+import { Board } from "../Board.js";
+import FileRankFactory from "../FileRankFactory.js";
+import { Command } from "../commands/Command.js";
 import { Movement } from "./Movement.js";
 import { Piece } from "./Piece.js";
 
 export class Pawn extends Piece {
   #promotionRow;
+  #jumpedFileRank;
+
   constructor(piece, colour) {
     super(piece.type, piece.character, colour);
 
     this.#promotionRow = piece.promotionRow;
+    this.#jumpedFileRank = null;
 
     this.configureMoves();
   }
@@ -32,6 +38,10 @@ export class Pawn extends Piece {
 
     //if there is an opponent's piece on the diagonal then its a valid move
     let piecePosition = board.getPiecePosition(this);
+    piecePosition = {
+      col: piecePosition.getCol(),
+      row: piecePosition.getRow(),
+    };
     let moves = [];
 
     if (this.getColour() === Piece.COLOUR.WHITE) {
@@ -54,7 +64,9 @@ export class Pawn extends Piece {
       let move = moves[i];
       if (!move) continue;
 
-      let piece = board.getPiece(move);
+      const moveFilRank = FileRankFactory.getFileRank(move.col, move.row);
+
+      let piece = board.getPiece(moveFilRank);
       if (piece && piece.getColour() != this.getColour()) {
         availableMoves.push(move);
       }
@@ -66,7 +78,8 @@ export class Pawn extends Piece {
   validateTheMove(board, availableMoves) {
     for (let i = 0; i < availableMoves.length; i++) {
       let move = availableMoves[i];
-      let piece = board.getPiece(move);
+      const moveFileRank = FileRankFactory.getFileRank(move.col, move.row);
+      let piece = board.getPiece(moveFileRank);
       if (piece && piece.getColour() != this.getColour()) {
         availableMoves.splice(i, 1);
       }
@@ -90,5 +103,15 @@ export class Pawn extends Piece {
       }
     }
     super.moved(from, to);
+
+    // check if it jumped
+    const rankDifference = Math.abs(from.getRow() - to.getRow());
+    if (!this.#jumpedFileRank && rankDifference > 1) {
+      this.#jumpedFileRank = to;
+    }
+  }
+
+  getJumpedFileRank() {
+    return this.#jumpedFileRank;
   }
 }

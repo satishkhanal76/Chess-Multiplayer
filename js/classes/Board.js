@@ -1,4 +1,7 @@
+import FileRank from "./FileRank.js";
+import FileRankFactory from "./FileRankFactory.js";
 import Listeners from "./Listeners.js";
+import MoveValidator from "./MoveValidators/MoveValidator.js";
 import { CommandHandler } from "./commands/CommandHandler.js";
 import { Piece } from "./pieces/Piece.js";
 
@@ -12,14 +15,17 @@ export class Board {
 
   #moveEventListener;
 
-  constructor() {
-    this.#col = 8;
-    this.#row = 8;
+  #moveValidator;
+
+  constructor(col, row) {
+    this.#col = col || 8;
+    this.#row = row || 8;
 
     this.#createBoard();
 
     this.#commandHandler = new CommandHandler();
     this.#moveEventListener = new Listeners();
+    this.#moveValidator = new MoveValidator(this);
   }
 
   #createBoard() {
@@ -44,12 +50,6 @@ export class Board {
       }
     }
     return pieces;
-  }
-
-  getPieceAt(fileRank) {
-    const col = fileRank.getCol();
-    const row = fileRank.getRow();
-    return this.#grid[col][row];
   }
 
   getPiecesAtFile(fileRank) {
@@ -98,8 +98,8 @@ export class Board {
    * @returns
    */
   placePiece(piece, at) {
-    if (this.#grid[at.col][at.row]) return;
-    this.#grid[at.col][at.row] = piece;
+    if (this.#grid[at.getCol()][at.getRow()]) return;
+    this.#grid[at.getCol()][at.getRow()] = piece;
   }
 
   /**
@@ -108,8 +108,8 @@ export class Board {
    * @returns the piece that was removed
    */
   removePiece(from) {
-    let piece = this.#grid[from.col][from.row];
-    this.#grid[from.col][from.row] = null;
+    let piece = this.#grid[from.getCol()][from.getRow()];
+    this.#grid[from.getCol()][from.getRow()] = null;
     return piece;
   }
 
@@ -127,6 +127,10 @@ export class Board {
     this.placePiece(piece, to);
 
     return takingPiece;
+  }
+
+  move(from, to) {
+    const piece = this.getPiece(at);
   }
 
   /**
@@ -164,6 +168,7 @@ export class Board {
    * @param {Piece} piece the piece to get the valid moves for
    */
   getValidMoves(piece) {
+    return this.#moveValidator.getValidMoves(piece);
     let validMoves;
     let to;
 
@@ -172,13 +177,12 @@ export class Board {
     validMoves = piece.getAvailableMoves(this);
 
     for (let i = validMoves.length - 1; i >= 0; i--) {
-      to = {
-        col: validMoves[i].col,
-        row: validMoves[i].row,
-      };
+      to = validMoves[i];
+
+      const toFileRank = FileRankFactory.getFileRank(to.col, to.row);
 
       //if this move puts king at risk than its not valid
-      if (this.willMovePutKingInCheck(piecePosition, to)) {
+      if (this.willMovePutKingInCheck(piecePosition, toFileRank)) {
         validMoves.splice(i, 1);
       }
     }
@@ -208,11 +212,14 @@ export class Board {
 
     let isAvalidPosition = false;
 
+    // console.log(this.#commandHandler.getCurrentCommand());
+
     let validMoves = this.getValidMoves(fromPiece);
 
     for (let i = 0; i < validMoves.length; i++) {
       let move = validMoves[i];
-      if (move.col === to.col && move.row === to.row) isAvalidPosition = true;
+      if (move.col === to.getCol() && move.row === to.getRow())
+        isAvalidPosition = true;
     }
     return isAvalidPosition;
   }
@@ -250,11 +257,11 @@ export class Board {
 
   /**
    * Gets a piece from a location on the board
-   * @param {Object} at the location to get the pice from
+   * @param {FileRank} at the location to get the pice from
    * @returns piece at that location
    */
   getPiece(at) {
-    return this.#grid[at.col][at.row];
+    return this.#grid[at.getCol()][at.getRow()];
   }
 
   /**
@@ -265,10 +272,94 @@ export class Board {
   getPiecePosition(piece) {
     for (let i = 0; i < this.#grid.length; i++) {
       for (let j = 0; j < this.#grid[i].length; j++) {
-        if (this.#grid[i][j] === piece) return { col: i, row: j };
+        if (this.#grid[i][j] === piece)
+          return FileRankFactory.getFileRank(i, j);
       }
     }
     return null;
+  }
+
+  findPinAndChecks(colour) {
+    const pinnedPieces = [];
+    let isKingChecked = false;
+    const king = Board.filterColouredPieces(
+      this.getPiecesByType(Piece.TYPE.KING),
+      colour
+    ).pop();
+    const kingPosition = this.getPiecePosition(king);
+
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        //for each direction
+        const position = {
+          col: kingPosition.getCol() + i,
+          row: kingPosition.getRow() + j,
+        };
+        let possiblyPinnedPiece = null;
+        while (
+          position.col < this.#col - 1 &&
+          position.col >= 0 &&
+          position.row < this.#row - 1 &&
+          position.row >= 0
+        ) {
+          const piece = this.getPiece(
+            FileRankFactory.getFileRank(position.col, position.row)
+          );
+
+          // this piece might be pinned
+          if (piece && piece.getColour() === colour) {
+            if (!possiblyPinnedPiece) {
+              possiblyPinnedPiece = piece;
+            } else {
+              break;
+            }
+          } else if (piece && piece.getColour() !== colour) {
+            const enemyPieceMoves = this.getValidMoves(piece);
+            enemyPieceMoves.forEach((enemyPieceMove) => {
+              const pieceAtEnemyMove = this.getPiece(
+                FileRankFactory.getFileRank(
+                  enemyPieceMove.col,
+                  enemyPieceMove.row
+                )
+              );
+              if (pieceAtEnemyMove && pieceAtEnemyMove === king) {
+                isKingChecked = true;
+              } else if (
+                pieceAtEnemyMove &&
+                pieceAtEnemyMove === possiblyPinnedPiece
+              ) {
+                pinnedPieces.push(possiblyPinnedPiece);
+              }
+            });
+            break;
+          }
+
+          position.col += i;
+          position.row += j;
+        }
+      }
+    }
+
+    const enemyKnights = Board.filterOutColouredPieces(
+      this.getPiecesByType(Piece.TYPE.KNIGHT),
+      colour
+    );
+
+    enemyKnights.find((enemyKnight) => {
+      const enemyKnightMoves = this.getValidMoves(enemyKnight);
+      const foundKing = enemyKnightMoves.find(
+        (move) =>
+          move.col === kingPosition.getCol() &&
+          move.row === kingPosition.getRow()
+      );
+
+      if (foundKing) {
+        isKingChecked = true;
+      }
+    });
+
+    console.log("Pinned Pieces: ", pinnedPieces);
+    console.log("King Checked: ", isKingChecked);
   }
 
   /**
@@ -302,7 +393,10 @@ export class Board {
 
     for (let i = 0; i < moves.length; i++) {
       const move = moves[i];
-      let pieceAtTheSpot = this.getPiece(move);
+
+      let pieceAtTheSpot = this.getPiece(
+        FileRankFactory.getFileRank(move.col, move.row)
+      );
       if (pieceAtTheSpot) pieces.push(pieceAtTheSpot);
     }
 
@@ -329,10 +423,6 @@ export class Board {
 
   getCommandHandler() {
     return this.#commandHandler;
-  }
-
-  getGrid() {
-    return this.#grid;
   }
 
   getColumn() {

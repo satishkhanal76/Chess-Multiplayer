@@ -5,8 +5,7 @@ import { PieceFactory } from "./pieces/PieceFactory.js";
 import GameValidator from "./validators/GameValidator.js";
 import CheckmateValidator from "./validators/CheckmateValidator.js";
 import StalemateValidator from "./validators/StalemateValidator.js";
-import FileRankMaker from "./FileRankMaker.js";
-import FileRank from "./FileRank.js";
+import FileRankFactory from "./FileRankFactory.js";
 
 export class Game {
   #board;
@@ -36,10 +35,14 @@ export class Game {
       this.validateGame();
 
       const command = event.command;
-      const from = new FileRank(command.getFrom()).getFileRank();
-      const to = new FileRank(command.getTo()).getFileRank();
 
-      console.log(from, "->", to);
+      try {
+        console.log(
+          command.getFrom().toString(),
+          "->",
+          command.getTo().toString()
+        );
+      } catch (err) {}
     });
   }
 
@@ -71,7 +74,10 @@ export class Game {
   }
 
   createBoard() {
-    this.#board = new Board();
+    this.#board = new Board(
+      FileRankFactory.NUM_OF_COLUMNS,
+      FileRankFactory.NUM_OF_ROWS
+    );
     this.setupBoard();
   }
 
@@ -88,7 +94,7 @@ export class Game {
       for (let j = 0; j < line.length; j++) {
         character = line.charAt(j);
         piece = PieceFactory.getPieceFen(character);
-        this.#board.placePiece(piece, { col: j, row: i });
+        this.#board.placePiece(piece, FileRankFactory.getFileRank(j, i));
       }
     }
   }

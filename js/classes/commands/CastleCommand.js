@@ -1,3 +1,4 @@
+import FileRankFactory from "../FileRankFactory.js";
 import { Command } from "./Command.js";
 
 export class CastleCommand extends Command {
@@ -23,6 +24,8 @@ export class CastleCommand extends Command {
   }
 
   execute() {
+    this.setExecuted(true);
+
     this.#king = this.#board.getPiece(this.#kingPosition);
     this.#rook = this.#board.getPiece(this.#rookPosition);
 
@@ -31,8 +34,15 @@ export class CastleCommand extends Command {
     let kingNewIndex = pathToKing.length - 2;
     let rookNewIndex = kingNewIndex + 1;
 
-    this.#kingNewPosition = pathToKing[kingNewIndex];
-    this.#rookNewPosition = pathToKing[rookNewIndex];
+    this.#kingNewPosition = FileRankFactory.getFileRank(
+      pathToKing[kingNewIndex].col,
+      pathToKing[kingNewIndex].row
+    );
+
+    this.#rookNewPosition = FileRankFactory.getFileRank(
+      pathToKing[rookNewIndex].col,
+      pathToKing[rookNewIndex].row
+    );
 
     this.#board.movePiece(this.#king, this.#kingNewPosition);
     this.#board.movePiece(this.#rook, this.#rookNewPosition);
@@ -40,9 +50,7 @@ export class CastleCommand extends Command {
     this.#king.moved(this.#kingPosition, this.#kingNewPosition);
     this.#king.moved(this.#rookPosition, this.#rookNewPosition);
 
-    this.#board.getMoveEventListener().emit({
-      command: this,
-    });
+    this.emit();
 
     return true;
   }
@@ -55,5 +63,11 @@ export class CastleCommand extends Command {
   redo() {
     this.#board.movePiece(this.#king, this.#kingNewPosition);
     this.#board.movePiece(this.#rook, this.#rookNewPosition);
+  }
+
+  emit() {
+    this.#board.getMoveEventListener().emit({
+      command: this,
+    });
   }
 }

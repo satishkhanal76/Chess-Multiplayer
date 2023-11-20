@@ -1,4 +1,4 @@
-import FileRankMaker from "./FileRankMaker.js";
+import FileRankFactory from "./FileRankFactory.js";
 
 export default class FileRank {
   #file;
@@ -9,7 +9,7 @@ export default class FileRank {
 
   constructor(colRowOrFileRank) {
     if (typeof colRowOrFileRank === "string") {
-      const colRow = FileRankMaker.convertToColRow(colRowOrFileRank);
+      const colRow = FileRankFactory.convertToColRow(colRowOrFileRank);
       this.#col = colRow.col;
       this.#row = colRow.row;
       this.#file = colRowOrFileRank.charAt(0);
@@ -17,7 +17,7 @@ export default class FileRank {
     } else {
       this.#col = colRowOrFileRank.col;
       this.#row = colRowOrFileRank.row;
-      const fileRank = FileRankMaker.convertToFileRank(this.#col, this.#row);
+      const fileRank = FileRankFactory.convertToFileRank(this.#col, this.#row);
       this.#file = fileRank.charAt(0);
       this.#rank = fileRank.charAt(1);
     }

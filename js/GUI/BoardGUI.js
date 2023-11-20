@@ -1,6 +1,6 @@
 import { Piece } from "../classes/pieces/Piece.js";
 import { BlockGUI } from "./BlockGUI.js";
-import FileRank from "../classes/FileRank.js";
+import FileRankFactory from "../classes/FileRankFactory.js";
 
 export class BoardGUI {
   #game;
@@ -54,46 +54,45 @@ export class BoardGUI {
     this.updateButtons();
 
     document.addEventListener("keypress", (eve) => {
-      this.showBoardOnConsole();
+      console.log(
+        this.#board.getPiecesAtRank(FileRankFactory.getFileRank("a8"))
+      );
+
+      this.#board.findPinAndChecks(Piece.COLOUR.BLACK);
     });
   }
 
   clicked(block) {
     const currentPlayer = this.#game.getCurrentPlayer();
-    let from, to;
 
-    to = {
-      col: block.getFileRank().getCol(),
-      row: block.getFileRank().getRow(),
-    };
-
-    let piece = this.#board.getPiece(to);
+    let piece = this.#board.getPiece(block.getFileRank());
 
     if (this.#clickedPiece) {
-      from = {
-        col: this.#clickedPiece.getFileRank().getCol(),
-        row: this.#clickedPiece.getFileRank().getRow(),
-      };
-
-      let fromPiece = this.#board.getPiece(from);
-      let toPiece = this.#board.getPiece(to);
+      let fromPiece = this.#board.getPiece(this.#clickedPiece.getFileRank());
+      let toPiece = this.#board.getPiece(block.getFileRank());
 
       if (
         fromPiece?.getType() === Piece.TYPE.KING &&
         toPiece?.getType() === Piece.TYPE.ROOK
       ) {
-        currentPlayer.castle(from, to);
+        currentPlayer.castle(
+          this.#clickedPiece.getFileRank(),
+          block.getFileRank()
+        );
       } else if (
         fromPiece.getType() === Piece.TYPE.PAWN &&
-        fromPiece.getPromotionRow() === to.row
+        fromPiece.getPromotionRow() === block.getFileRank().getRow()
       ) {
         currentPlayer.promotePiece(
-          this.#board.getPiece(from),
-          to,
+          this.#board.getPiece(this.#clickedPiece.getFileRank()),
+          block.getFileRank(),
           Piece.TYPE.QUEEN
         );
       } else {
-        currentPlayer.movePiece(this.#board.getPiece(from), to);
+        currentPlayer.movePiece(
+          this.#board.getPiece(this.#clickedPiece.getFileRank()),
+          block.getFileRank()
+        );
       }
 
       this.#clickedPiece = null;
@@ -104,11 +103,6 @@ export class BoardGUI {
       if (!piece) return null;
 
       this.#clickedPiece = block;
-
-      from = {
-        col: this.#clickedPiece.getFileRank().getCol(),
-        row: this.#clickedPiece.getFileRank().getRow(),
-      };
 
       let validMoves = this.#game.getCurrentPlayer().getValidMoves(piece);
       if (!validMoves || validMoves.length < 1) {
@@ -210,21 +204,19 @@ export class BoardGUI {
   }
 
   #createBlocks() {
-    let grid = this.#board.getGrid();
+    const columnLength = this.#board.getColumn();
+    const rowLength = this.#board.getRow();
     let piece;
 
     let block;
     let lastColour = Piece.COLOUR.WHITE;
 
-    for (let i = 0; i < grid.length; i++) {
+    for (let i = 0; i < columnLength; i++) {
       // this.#element.append((document.createElement("span").textContent = i));
-      for (let j = 0; j < grid[i].length; j++) {
-        piece = grid[i][j];
+      for (let j = 0; j < rowLength; j++) {
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
 
-        const fileRank = new FileRank({
-          col: j,
-          row: i,
-        });
+        const fileRank = FileRankFactory.getFileRank(j, i);
 
         block = new BlockGUI(fileRank, this, lastColour);
 
@@ -246,14 +238,15 @@ export class BoardGUI {
   }
 
   updateBoard() {
-    let grid = this.#board.getGrid();
+    const columnLength = this.#board.getColumn();
+    const rowLenghth = this.#board.getRow();
     let piece;
 
     let block;
 
-    for (let i = 0; i < grid.length; i++) {
-      for (let j = 0; j < grid[i].length; j++) {
-        piece = grid[i][j];
+    for (let i = 0; i < columnLength; i++) {
+      for (let j = 0; j < rowLenghth; j++) {
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
 
         block = this.#blocks.filter(
           (block) =>
@@ -268,17 +261,15 @@ export class BoardGUI {
   }
 
   showBoardOnConsole() {
-    let grid = this.#board.getGrid();
+    const columnLength = this.#board.getColumn();
+    const rowLenghth = this.#board.getRow();
+
     let piece;
     let output = "";
-    for (let i = 0; i < grid.length; i++) {
-      for (let j = 0; j < grid[i].length; j++) {
-        const block = this.#blocks.find(
-          (b) =>
-            b.getFileRank().getCol() === j && b.getFileRank().getRow() === i
-        );
-        piece = grid[j][i];
-        output += piece ? piece.getCharacter() : "  ";
+    for (let i = 0; i < columnLength; i++) {
+      for (let j = 0; j < rowLenghth; j++) {
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
+        output += piece ? piece.getCharacter() : " ";
       }
       output = output + "\n";
     }

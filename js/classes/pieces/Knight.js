@@ -1,3 +1,4 @@
+import FileRankFactory from "../FileRankFactory.js";
 import { Movement } from "./Movement.js";
 import { Piece } from "./Piece.js";
 
@@ -14,7 +15,9 @@ export class Knight extends Piece {
   checkPathForValidSpots(board, spots) {
     for (let i = spots.length - 1; i >= 0; i--) {
       let spot = spots[i];
-      let pieceAtTheSpot = board.getPiece(spot);
+      let pieceAtTheSpot = board.getPiece(
+        FileRankFactory.getFileRank(spot.col, spot.row)
+      );
 
       if (!pieceAtTheSpot) continue;
 

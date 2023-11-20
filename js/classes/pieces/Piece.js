@@ -1,3 +1,5 @@
+import FileRankFactory from "../FileRankFactory.js";
+
 export class Piece {
   static COLOUR = {
     BLACK: "BLACK",
@@ -40,7 +42,10 @@ export class Piece {
 
     for (let i = 0; i < this.#moves.length; i++) {
       const move = this.#moves[i];
-      let spots = move(dimension, piecePosition);
+      let spots = move(dimension, {
+        col: piecePosition.getCol(),
+        row: piecePosition.getRow(),
+      });
 
       if (!spots) continue;
       availableSpots = availableSpots.concat(
@@ -55,7 +60,9 @@ export class Piece {
       let spot = spots[i];
       let pieceAtTheSpot;
 
-      pieceAtTheSpot = board.getPiece(spot);
+      const spotFileRank = FileRankFactory.getFileRank(spot.col, spot.row);
+
+      pieceAtTheSpot = board.getPiece(spotFileRank);
 
       if (!pieceAtTheSpot) continue;
 

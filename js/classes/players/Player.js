@@ -1,5 +1,6 @@
 import { Board } from "../Board.js";
 import { CastleCommand } from "../commands/CastleCommand.js";
+import { EnPassantCommand } from "../commands/EnPassantCommand.js";
 import { MoveCommand } from "../commands/MoveCommand.js";
 import { PromotionCommand } from "../commands/PromotionCommand.js";
 import { Piece } from "../pieces/Piece.js";
@@ -32,19 +33,33 @@ export class Player {
   /**
    * Moves the piece on the board
    */
-  movePiece(piece, at) {
+  movePiece(piece, toFileRank) {
     //if not our piece then return
     if (piece.getColour() !== this.getColour()) return false;
 
-    // console.log(this.getColour(), this.#board.isUnderAttack(this.findKing()));
+    let fromFileRank = this.#board.getPiecePosition(piece);
 
-    let from = this.#board.getPiecePosition(piece);
+    let command;
 
-    const command = new MoveCommand(this.#board, from, at);
+    // It is an en-passant move
+    if (
+      piece.getType() === Piece.TYPE.PAWN &&
+      fromFileRank.getCol() !== toFileRank.getCol() &&
+      !this.#board.getPiece(toFileRank)
+    ) {
+      command = new EnPassantCommand(this.#board, fromFileRank, toFileRank);
+    } else {
+      command = new MoveCommand(this.#board, fromFileRank, toFileRank);
+    }
 
-    this.#board.getCommandHandler().addCommand(command);
-    this.#board.getCommandHandler().executeNextCommand();
+    command.execute();
 
+    if (command.isAValidCommand()) {
+      this.#board.getCommandHandler().addCommand(command);
+    } else {
+      //if not valid than it will automatically undo the command so can just remove it
+      this.#board.getCommandHandler().removeCommand(command);
+    }
     let takenPiece;
     takenPiece = command.getTakingPiece();
     if (command.isAValidCommand() && takenPiece) {
