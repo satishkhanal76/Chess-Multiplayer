@@ -86,4 +86,12 @@ export class CastleCommand extends Command {
   getRookNewPosition() {
     return this.#rookNewPosition;
   }
+
+  getKing() {
+    return this.#king;
+  }
+
+  getRook() {
+    return this.#rook;
+  }
 }

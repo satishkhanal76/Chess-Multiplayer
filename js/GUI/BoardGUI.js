@@ -39,26 +39,35 @@ export class BoardGUI {
     prev.addEventListener("click", async () => {
       const command = this.#board.getCommandHandler().undoCommand();
 
-      await this.animateCommand(command, true);
+      const element = await this.animateCommand(command, true);
+      this.removeElement(element);
       //animation updates the board
-      // this.updateBoard();
+      this.updateBoard();
       this.updateButtons();
     });
 
     next.addEventListener("click", async () => {
       const command = this.#board.getCommandHandler().redoCommand();
 
-      await this.animateCommand(command);
+      const element = await this.animateCommand(command);
+      this.removeElement(element);
 
-      // this.updateBoard();
+      this.updateBoard();
       this.updateButtons();
     });
 
     current.addEventListener("click", async () => {
       const commands = this.#board.getCommandHandler().executeCommands();
+      const elements = [];
 
-      Promise.all(commands.map((command) => this.animateCommand(command)));
-      // this.updateBoard();
+      for (let i = 0; i < commands.length; i++) {
+        const element = await this.animateCommand(commands[i]);
+        elements.push(element);
+      }
+
+      this.removeElement(elements);
+
+      this.updateBoard();
       this.updateButtons();
     });
 
@@ -74,37 +83,38 @@ export class BoardGUI {
   }
 
   async animateCommand(command, undo = false) {
-    return new Promise(async (resolve, reject) => {
-      if (undo) {
-        if (command.getType() === Command.TYPES.CASTLE_COMMAND) {
-          this.animateCasstleCommand(
-            command,
-            this.getBlock(command.getKingNewPosition()),
-            this.getBlock(command.getRookNewPosition()),
-            true
-          );
-        } else {
-          this.animateMoveCommand(
-            command,
-            this.getBlock(command.getTo()),
-            true
-          );
-        }
+    if (!command) return null;
+    let data;
+    if (undo) {
+      if (command.getType() === Command.TYPES.CASTLE_COMMAND) {
+        data = await this.animateCasstleCommand(
+          command,
+          this.getBlock(command.getKingNewPosition()),
+          this.getBlock(command.getRookNewPosition()),
+          true
+        );
       } else {
-        if (command.getType() === Command.TYPES.CASTLE_COMMAND) {
-          this.animateCasstleCommand(
-            command,
-            this.getBlock(command.getKingPosition()),
-            this.getBlock(command.getRookPosition())
-          );
-        } else {
-          this.animateMoveCommand(command, this.getBlock(command.getFrom()));
-        }
+        data = await this.animateMoveCommand(
+          command,
+          this.getBlock(command.getTo()),
+          true
+        );
       }
-      setTimeout(() => {
-        resolve("RESOLVED");
-      }, this.#animationTime);
-    });
+    } else {
+      if (command.getType() === Command.TYPES.CASTLE_COMMAND) {
+        data = await this.animateCasstleCommand(
+          command,
+          this.getBlock(command.getKingPosition()),
+          this.getBlock(command.getRookPosition())
+        );
+      } else {
+        data = await this.animateMoveCommand(
+          command,
+          this.getBlock(command.getFrom())
+        );
+      }
+    }
+    return data;
   }
 
   getBlock(fileRank) {
@@ -115,7 +125,8 @@ export class BoardGUI {
     );
   }
 
-  clicked(block) {
+  async clicked(block) {
+    let element;
     const currentPlayer = this.#game.getCurrentPlayer();
 
     let piece = this.#board.getPiece(block.getFileRank());
@@ -144,7 +155,7 @@ export class BoardGUI {
           block.getFileRank()
         );
 
-        this.animateCasstleCommand(command, this.#clickedPiece, block);
+        element = await this.animateCommand(command);
       } else if (
         fromPiece.getType() === Piece.TYPE.PAWN &&
         fromPiece.getPromotionRow() === block.getFileRank().getRow()
@@ -154,15 +165,18 @@ export class BoardGUI {
           block.getFileRank(),
           Piece.TYPE.QUEEN
         );
-        this.animateMoveCommand(command, this.#clickedPiece);
+        element = await this.animateCommand(command);
       } else {
         command = currentPlayer.movePiece(
           this.#board.getPiece(this.#clickedPiece.getFileRank()),
           block.getFileRank()
         );
-        this.animateMoveCommand(command, this.#clickedPiece);
+        element = await this.animateCommand(command);
       }
+
+      this.removeElement(element);
       this.removeValidSoptsMark();
+      this.updateBoard();
 
       this.displayModalIfOver();
       this.updateButtons();
@@ -181,7 +195,16 @@ export class BoardGUI {
     }
   }
 
-  animateMoveCommand(command, piece, undo = false) {
+  removeElement(element) {
+    if (element && element instanceof Array) {
+      element.forEach((ele) => ele?.remove());
+    } else if (element) {
+      element.remove();
+    }
+  }
+
+  async animateMoveCommand(command, piece, undo = false) {
+    let data;
     const from = {
       col: command.getFrom().getCol(),
       row: command.getFrom().getRow(),
@@ -190,15 +213,19 @@ export class BoardGUI {
       col: command.getTo().getCol(),
       row: command.getTo().getRow(),
     };
+    const text = command.getMovingPiece().getCharacter();
+
     if (!command.isAValidCommand()) return null;
     if (undo) {
-      this.animateBlock(to, from, piece);
+      data = await this.animateBlock(to, from, piece, text);
     } else {
-      this.animateBlock(from, to, piece);
+      data = await this.animateBlock(from, to, piece, text);
     }
+    return data;
   }
 
-  animateCasstleCommand(command, kingBlock, rookBlock, undo = false) {
+  async animateCasstleCommand(command, kingBlock, rookBlock, undo = false) {
+    let data;
     const fromKing = {
       col: command.getKingPosition().getCol(),
       row: command.getKingPosition().getRow(),
@@ -215,17 +242,21 @@ export class BoardGUI {
       col: command.getRookNewPosition().getCol(),
       row: command.getRookNewPosition().getRow(),
     };
+    const kingText = command.getKing().getCharacter();
+    const rookText = command.getRook().getCharacter();
+
     if (undo) {
-      Promise.all([
-        this.animateBlock(toKing, fromKing, kingBlock),
-        this.animateBlock(toRook, fromRook, rookBlock),
+      data = await Promise.all([
+        this.animateBlock(toKing, fromKing, kingBlock, kingText),
+        this.animateBlock(toRook, fromRook, rookBlock, rookText),
       ]);
     } else {
-      Promise.all([
-        this.animateBlock(fromKing, toKing, kingBlock),
-        this.animateBlock(fromRook, toRook, rookBlock),
+      data = await Promise.all([
+        this.animateBlock(fromKing, toKing, kingBlock, kingText),
+        this.animateBlock(fromRook, toRook, rookBlock, rookText),
       ]);
     }
+    return data;
   }
   updateButtons(disable = false) {
     let prev = document.getElementById("previous");
@@ -357,40 +388,47 @@ export class BoardGUI {
     }
   }
 
-  animateBlock(from, to, block) {
-    const newBlock = new BlockGUI(block.getFileRank(), this);
+  animateBlock(from, to, block, text) {
+    return new Promise((resolve, reject) => {
+      const newBlock = new BlockGUI(block.getFileRank(), this);
 
-    newBlock.setText(block.getText());
-    const element = newBlock.getElement();
-    element.style.position = "absolute";
+      newBlock.setText(text);
+      const element = newBlock.getElement();
+      element.style.position = "absolute";
 
-    element.addEventListener("animationend", (eve) => {
-      element.remove();
-      this.updateBoard();
+      // element.addEventListener("animationend", (eve) => {
+      //   element.remove();
+      //   this.updateBoard();
+      // });
+
+      this.#element.append(element);
+      const offsetFrom = {
+        col: from.col * element.offsetWidth,
+        row: from.row * element.offsetHeight,
+      };
+      const offsetTo = {
+        col: to.col * element.offsetWidth,
+        row: to.row * element.offsetHeight,
+      };
+
+      element.style.setProperty("--from-col", offsetFrom.col + "px");
+      element.style.setProperty("--from-row", offsetFrom.row + "px");
+      element.style.setProperty("--to-col", offsetTo.col + "px");
+      element.style.setProperty("--to-row", offsetTo.row + "px");
+
+      this.removeValidSoptsMark();
+      block.setText(" ");
+
+      element.style.animation = `animate-move ${
+        this.#animationTime
+      }ms cubic-bezier( 0.215, 0.61, 0.355, 1 )`;
+
+      setTimeout(() => {
+        element.style.top = offsetTo.row + "px";
+        element.style.left = offsetTo.col + "px";
+        resolve(element);
+      }, this.#animationTime);
     });
-
-    this.#element.append(element);
-
-    const offsetFrom = {
-      col: from.col * element.offsetWidth,
-      row: from.row * element.offsetHeight,
-    };
-    const offsetTo = {
-      col: to.col * element.offsetWidth,
-      row: to.row * element.offsetHeight,
-    };
-
-    element.style.setProperty("--from-col", offsetFrom.col + "px");
-    element.style.setProperty("--from-row", offsetFrom.row + "px");
-    element.style.setProperty("--to-col", offsetTo.col + "px");
-    element.style.setProperty("--to-row", offsetTo.row + "px");
-
-    this.removeValidSoptsMark();
-    block.setText(" ");
-
-    element.style.animation = `animate-move ${
-      this.#animationTime
-    }ms cubic-bezier( 0.215, 0.61, 0.355, 1 )`;
   }
 
   createBlock(fileRank, lastColour) {
@@ -419,10 +457,12 @@ export class BoardGUI {
         block.setText(piece ? piece.getCharacter() : " ");
         block.hideAsValidBlock();
         if (!piece) continue;
-        if (piece.getType() === Piece.TYPE.KING)
+        block.removeCheckStyle();
+        if (
+          piece.getType() === Piece.TYPE.KING &&
           this.#board.isKingInCheck(piece.getColour())
-            ? block.addCheckStyle()
-            : block.removeCheckStyle();
+        )
+          block.addCheckStyle();
       }
     }
   }
