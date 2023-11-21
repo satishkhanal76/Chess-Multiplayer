@@ -188,7 +188,7 @@ export class BoardGUI {
         element = await this.animateCommand(this.#promise);
 
         //reenable the commands for the animation
-        this.#commandsDisabled = true;
+        this.#commandsDisabled = false;
       } else if (
         fromPiece.getType() === Piece.TYPE.PAWN &&
         fromPiece.getPromotionRow() === block.getFileRank().getRow()
