@@ -61,6 +61,7 @@ main {
 }
 
 .board .block {
+  position: relative;
   display: flex;
 
   width: var(--block-width);
@@ -77,6 +78,13 @@ main {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+.block .fade-in-element {
+  all: inherit;
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 
 .modal-container {
@@ -199,5 +207,14 @@ main {
   to {
     top: var(--to-row);
     left: var(--to-col);
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
   }
 }

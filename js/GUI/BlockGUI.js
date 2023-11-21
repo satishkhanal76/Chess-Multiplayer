@@ -8,6 +8,8 @@ export class BlockGUI {
   #colour;
 
   #text;
+  #isAnimationBlock;
+  #textFadeInTime = 180;
 
   constructor(fileRank, boardGUI, colour) {
     this.#fileRank = fileRank;
@@ -16,6 +18,7 @@ export class BlockGUI {
 
     this.#colour = colour;
     this.#text = "";
+    this.#isAnimationBlock = false;
 
     this.createElement();
     this.addEventListeners();
@@ -57,6 +60,30 @@ export class BlockGUI {
     this.#element.textContent = this.#text;
   }
 
+  async fadeInText(text) {
+    return new Promise((resolve, reject) => {
+      this.setText(" ");
+
+      const fadeInElement = document.createElement("span");
+
+      fadeInElement.classList.add("fade-in-element");
+
+      fadeInElement.textContent = text;
+
+      this.#element.append(fadeInElement);
+
+      fadeInElement.style.animation = `zoom-in ${
+        this.#textFadeInTime
+      }ms cubic-bezier( 0.215, 0.61, 0.355, 1 )`;
+
+      setTimeout(() => {
+        fadeInElement.remove();
+        this.setText(text);
+        resolve("ANIMATION DONE");
+      }, this.#textFadeInTime);
+    });
+  }
+
   getElement() {
     return this.#element;
   }
@@ -71,5 +98,12 @@ export class BlockGUI {
 
   removeCheckStyle() {
     this.#element.classList.remove("incheck");
+  }
+
+  setIsAnimationBlock(isAnimation) {
+    this.#isAnimationBlock = isAnimation;
+  }
+  getIsAnimationBlock() {
+    return this.#isAnimationBlock;
   }
 }

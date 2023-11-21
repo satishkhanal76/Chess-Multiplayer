@@ -15,7 +15,11 @@ export class BoardGUI {
 
   #modal;
 
-  #animationTime = 250;
+  #animationTime = 200;
+
+  #promise;
+
+  #commandsDisabled;
 
   constructor(game, modal) {
     this.#game = game;
@@ -24,6 +28,8 @@ export class BoardGUI {
     this.#modal = modal;
 
     this.#element = document.getElementById("board");
+
+    this.#commandsDisabled = false;
 
     this.#createBlocks();
     this.updateBoard();
@@ -37,48 +43,61 @@ export class BoardGUI {
     let current = document.getElementById("current");
 
     prev.addEventListener("click", async () => {
-      const command = this.#board.getCommandHandler().undoCommand();
+      if (this.#commandsDisabled) return null;
+      this.#commandsDisabled = true;
+      this.#promise = this.#board.getCommandHandler().undoCommand();
 
-      const element = await this.animateCommand(command, true);
+      const element = await this.animateCommand(this.#promise, true);
+
       this.removeElement(element);
-      //animation updates the board
-      this.updateBoard();
+
       this.updateButtons();
+      this.#commandsDisabled = false;
     });
 
     next.addEventListener("click", async () => {
-      const command = this.#board.getCommandHandler().redoCommand();
+      if (this.#commandsDisabled) return null;
+      this.#commandsDisabled = true;
+      this.#promise = this.#board.getCommandHandler().redoCommand();
 
-      const element = await this.animateCommand(command);
+      const element = await this.animateCommand(this.#promise);
+
       this.removeElement(element);
 
-      this.updateBoard();
       this.updateButtons();
+      this.#commandsDisabled = false;
     });
 
-    current.addEventListener("click", async () => {
-      const commands = this.#board.getCommandHandler().executeCommands();
-      const elements = [];
+    current.addEventListener("click", async (eve) => {
+      this.#commandsDisabled = true;
 
-      for (let i = 0; i < commands.length; i++) {
-        const element = await this.animateCommand(commands[i]);
-        elements.push(element);
-      }
-
-      this.removeElement(elements);
-
-      this.updateBoard();
+      await this.executeAllCommands();
       this.updateButtons();
+      this.#commandsDisabled = false;
     });
 
     this.updateButtons();
 
-    document.addEventListener("keypress", (eve) => {
-      console.log(
-        this.#board.getPiecesAtRank(FileRankFactory.getFileRank("a8"))
-      );
+    // document.addEventListener("keypress", (eve) => {
+    //   console.log(eve.key);
 
-      this.#board.findPinAndChecks(Piece.COLOUR.BLACK);
+    //   this.#board.findPinAndChecks(Piece.COLOUR.BLACK);
+    // });
+
+    document.addEventListener("keydown", (eve) => {
+      switch (eve.key) {
+        case "ArrowLeft":
+          prev.click();
+          break;
+        case "ArrowRight":
+          next.click();
+          break;
+        case "Enter":
+          current.click();
+          break;
+        default:
+          break;
+      }
     });
   }
 
@@ -114,6 +133,9 @@ export class BoardGUI {
         );
       }
     }
+
+    this.updateCheckStyling();
+
     return data;
   }
 
@@ -143,40 +165,63 @@ export class BoardGUI {
         col: block.getFileRank().getCol(),
         row: block.getFileRank().getRow(),
       };
-
-      let command;
+      if (
+        this.#board.getCommandHandler().getCurrentCommandIndex() <
+        this.#board.getCommandHandler().getCommandIndex()
+      ) {
+        await this.executeAllCommands();
+      }
 
       if (
         fromPiece?.getType() === Piece.TYPE.KING &&
         toPiece?.getType() === Piece.TYPE.ROOK
       ) {
-        command = currentPlayer.castle(
+        //disable the commands for the animation
+        if (this.#commandsDisabled) return null;
+        this.#commandsDisabled = true;
+
+        this.#promise = currentPlayer.castle(
           this.#clickedPiece.getFileRank(),
           block.getFileRank()
         );
 
-        element = await this.animateCommand(command);
+        element = await this.animateCommand(this.#promise);
+
+        //reenable the commands for the animation
+        this.#commandsDisabled = true;
       } else if (
         fromPiece.getType() === Piece.TYPE.PAWN &&
         fromPiece.getPromotionRow() === block.getFileRank().getRow()
       ) {
-        command = currentPlayer.promotePiece(
+        //disable the commands for the animation
+        if (this.#commandsDisabled) return null;
+        this.#commandsDisabled = true;
+
+        this.#promise = currentPlayer.promotePiece(
           this.#board.getPiece(this.#clickedPiece.getFileRank()),
           block.getFileRank(),
           Piece.TYPE.QUEEN
         );
-        element = await this.animateCommand(command);
+        element = await this.animateCommand(this.#promise);
+        this.#commandsDisabled = false;
       } else {
-        command = currentPlayer.movePiece(
+        //disable the commands for the animation
+        if (this.#commandsDisabled) return null;
+        this.#commandsDisabled = true;
+
+        this.#promise = currentPlayer.movePiece(
           this.#board.getPiece(this.#clickedPiece.getFileRank()),
           block.getFileRank()
         );
-        element = await this.animateCommand(command);
+        element = await this.animateCommand(this.#promise);
+
+        this.#commandsDisabled = false;
       }
 
       this.removeElement(element);
       this.removeValidSoptsMark();
-      this.updateBoard();
+
+      // this.updateBoard();
 
       this.displayModalIfOver();
       this.updateButtons();
@@ -195,11 +240,36 @@ export class BoardGUI {
     }
   }
 
-  removeElement(element) {
-    if (element && element instanceof Array) {
-      element.forEach((ele) => ele?.remove());
-    } else if (element) {
-      element.remove();
+  async executeAllCommands() {
+    const commandHandler = this.#board.getCommandHandler();
+
+    do {
+      this.#promise = commandHandler.redoCommand();
+
+      if (!this.#promise) break;
+
+      const animationObject = await this.animateCommand(this.#promise);
+
+      this.updateButtons();
+      // this.updateBoard();
+
+      this.removeElement(animationObject);
+    } while (this.#promise);
+  }
+
+  removeElement(animationObject) {
+    if (!animationObject) return null;
+
+    let animatedBlock;
+
+    if (animationObject instanceof Array) {
+      animationObject.forEach((animation) => {
+        animatedBlock = animation["animatedBlock"];
+        animatedBlock?.getElement()?.remove();
+      });
+    } else {
+      animatedBlock = animationObject["animatedBlock"];
+      animatedBlock?.getElement()?.remove();
     }
   }
 
@@ -213,14 +283,81 @@ export class BoardGUI {
       col: command.getTo().getCol(),
       row: command.getTo().getRow(),
     };
-    const text = command.getMovingPiece().getCharacter();
+
+    const movingPiece = command.getMovingPiece();
+    const takingPiece = command.getTakingPiece();
 
     if (!command.isAValidCommand()) return null;
+
     if (undo) {
-      data = await this.animateBlock(to, from, piece, text);
+      if (takingPiece) {
+        if (command.getType() === Command.TYPES.EN_PASSANT_COMMAND) {
+          data = await Promise.all([
+            this.animateBlock(to, from, piece, movingPiece.getCharacter()),
+            this.getBlock(command.getTakingPiecePosition()).fadeInText(
+              takingPiece.getCharacter()
+            ),
+          ]);
+        } else {
+          data = await Promise.all([
+            this.animateBlock(to, from, piece, movingPiece.getCharacter()),
+            this.getBlock(command.getTo()).fadeInText(
+              takingPiece.getCharacter()
+            ),
+          ]);
+        }
+
+        this.getBlock(command.getFrom()).setText(movingPiece.getCharacter());
+        data = data.shift();
+      } else {
+        data = await this.animateBlock(
+          to,
+          from,
+          piece,
+          movingPiece.getCharacter()
+        );
+        this.getBlock(command.getFrom()).setText(movingPiece.getCharacter());
+        this.getBlock(command.getTo()).setText(" ");
+      }
     } else {
-      data = await this.animateBlock(from, to, piece, text);
+      data = await this.animateBlock(
+        from,
+        to,
+        piece,
+        movingPiece.getCharacter()
+      );
+
+      if (command.getType() === Command.TYPES.EN_PASSANT_COMMAND) {
+        this.getBlock(command.getTakingPiecePosition()).setText(" ");
+      }
+      this.getBlock(command.getTo()).setText(movingPiece.getCharacter());
     }
+
+    // if (undo) {
+    // data = await this.animateBlock(
+    //   to,
+    //   from,
+    //   piece,
+    //   movingPiece.getCharacter()
+    // );
+    // this.getBlock(command.getFrom()).setText(movingPiece.getCharacter());
+    //   if (takingPiece) {
+    // await this.getBlock(command.getTo()).fadeInText(
+    //   takingPiece.getCharacter()
+    //     );
+    //   } else {
+    //     this.getBlock(command.getTo()).setText(" ");
+    //   }
+    // } else {
+    // data = await this.animateBlock(
+    //   from,
+    //   to,
+    //   piece,
+    //   movingPiece.getCharacter()
+    // );
+    // this.getBlock(command.getTo()).setText(movingPiece.getCharacter());
+    // }
+
     return data;
   }
 
@@ -250,11 +387,15 @@ export class BoardGUI {
         this.animateBlock(toKing, fromKing, kingBlock, kingText),
         this.animateBlock(toRook, fromRook, rookBlock, rookText),
       ]);
+      this.getBlock(command.getKingPosition()).setText(kingText);
+      this.getBlock(command.getRookPosition()).setText(rookText);
     } else {
       data = await Promise.all([
         this.animateBlock(fromKing, toKing, kingBlock, kingText),
         this.animateBlock(fromRook, toRook, rookBlock, rookText),
       ]);
+      this.getBlock(command.getKingNewPosition()).setText(kingText);
+      this.getBlock(command.getRookNewPosition()).setText(rookText);
     }
     return data;
   }
@@ -370,12 +511,12 @@ export class BoardGUI {
         const fileRank = FileRankFactory.getFileRank(j, i);
 
         block = this.createBlock(fileRank, lastColour);
+        this.#element.append(block.getElement());
 
         this.#blocks.push(block);
 
         block.setText(piece ? piece.getCharacter() : " ");
 
-        this.#element.append(block.getElement());
         lastColour =
           lastColour === Piece.COLOUR.WHITE
             ? Piece.COLOUR.BLACK
@@ -390,16 +531,16 @@ export class BoardGUI {
 
   animateBlock(from, to, block, text) {
     return new Promise((resolve, reject) => {
-      const newBlock = new BlockGUI(block.getFileRank(), this);
+      let newBlock;
+
+      newBlock = new BlockGUI(
+        FileRankFactory.getFileRank(to.col, to.row),
+        this
+      );
 
       newBlock.setText(text);
       const element = newBlock.getElement();
       element.style.position = "absolute";
-
-      // element.addEventListener("animationend", (eve) => {
-      //   element.remove();
-      //   this.updateBoard();
-      // });
 
       this.#element.append(element);
       const offsetFrom = {
@@ -426,7 +567,15 @@ export class BoardGUI {
       setTimeout(() => {
         element.style.top = offsetTo.row + "px";
         element.style.left = offsetTo.col + "px";
-        resolve(element);
+        resolve({
+          from,
+          to,
+          animatedBlock: newBlock,
+          blockToBeAnimated: block,
+          replacingBlock: this.getBlock(
+            FileRankFactory.getFileRank(to.col, to.row)
+          ),
+        });
       }, this.#animationTime);
     });
   }
@@ -467,6 +616,21 @@ export class BoardGUI {
     }
   }
 
+  updateCheckStyling() {
+    const players = this.#game.getPlayers();
+
+    players.forEach((player) => {
+      const kingPos = this.#board.getPiecePosition(player.findKing());
+      const block = this.getBlock(kingPos);
+
+      if (this.#board.isKingInCheck(player.getColour())) {
+        block.addCheckStyle();
+      } else {
+        block.removeCheckStyle();
+      }
+    });
+  }
+
   removeValidSoptsMark() {
     const columnLength = this.#board.getColumn();
     const rowLenghth = this.#board.getRow();
@@ -503,5 +667,9 @@ export class BoardGUI {
       output = output + "\n";
     }
     console.log(output);
+  }
+
+  getCommandDisabled() {
+    return this.#commandsDisabled;
   }
 }

@@ -16,6 +16,7 @@ export class CommandHandler {
   }
 
   addCommand(command) {
+    // console.trace(command);
     if (!(command instanceof Command)) return null;
 
     if (this.#commandIndex !== this.#currentCommandIndex) {
@@ -76,24 +77,26 @@ export class CommandHandler {
    */
   executeCommands() {
     const executedCommands = [];
-    for (let i = this.#currentCommandIndex; i <= this.#commandIndex; i++) {
+    for (let i = this.#currentCommandIndex; i < this.#commandIndex; i++) {
       executedCommands.push(this.redoCommand());
     }
     return executedCommands;
   }
 
   executeNextCommand() {
-    if (!this.#commands[this.#currentCommandIndex]) {
+    const command = this.#commands[this.#currentCommandIndex];
+    if (!command) {
       console.error("No commands to execute!");
-      return;
+      return null;
     }
 
-    let commandSuccess = this.#commands[this.#currentCommandIndex].execute();
+    const commandSuccess = command.execute();
 
     if (!commandSuccess) {
-      this.removeCommand();
+      this.removeCommand(command);
       this.#decrementCurrentCommandIndex();
     }
+    return command;
   }
 
   #incrementCurrentCommandIndex() {

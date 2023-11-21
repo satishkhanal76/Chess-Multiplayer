@@ -74,6 +74,9 @@ export class EnPassantCommand extends Command {
     });
   }
 
+  getTakingPiecePosition() {
+    return this.#takingPiecePosition;
+  }
   getFrom() {
     return this.#from;
   }
