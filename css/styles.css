@@ -3,6 +3,11 @@
   padding: 0;
 }
 
+body {
+  /* disables double tap zoom on ios */
+  touch-action: manipulation;
+}
+
 button {
   padding: 1em;
   outline: none;
