@@ -13,8 +13,6 @@ export class PromotionCommand extends Command {
   #takingPiece;
   #promotionPiece;
 
-  #executed;
-
   constructor(board, from, to, promotionPiece) {
     super(Command.TYPES.PROMOTION_COMMAND);
 
@@ -90,6 +88,14 @@ export class PromotionCommand extends Command {
 
   getTakingPiece() {
     return this.#takingPiece;
+  }
+
+  getMovingPiece() {
+    return this.#movingPiece;
+  }
+
+  getPromotionPiece() {
+    return this.#promotionPiece;
   }
 
   isAValidCommand() {

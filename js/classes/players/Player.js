@@ -74,13 +74,17 @@ export class Player {
     if (piece.getColour() !== this.getColour()) return false;
     let from = this.#board.getPiecePosition(piece);
 
-    if (to.row != piece.getPromotionRow()) return false;
+    if (to.getRow() != piece.getPromotionRow()) return false;
 
     let promotionPiece = PieceFactory.getPiece(pieceType, this.getColour());
     const command = new PromotionCommand(this.#board, from, to, promotionPiece);
 
-    this.#board.getCommandHandler().addCommand(command);
-    this.#board.getCommandHandler().executeNextCommand();
+    command.execute();
+
+    if (command.isAValidCommand()) {
+      this.#board.getCommandHandler().addCommand(command);
+    }
+    // this.#board.getCommandHandler().executeNextCommand();
 
     let takenPiece;
     takenPiece = command.getTakingPiece();

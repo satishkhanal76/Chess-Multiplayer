@@ -331,32 +331,12 @@ export class BoardGUI {
         this.getBlock(command.getTakingPiecePosition()).setText(" ");
       }
       this.getBlock(command.getTo()).setText(movingPiece.getCharacter());
+      if (command.getType() === Command.TYPES.PROMOTION_COMMAND) {
+        this.getBlock(command.getTo()).setText(
+          command.getPromotionPiece().getCharacter()
+        );
+      }
     }
-
-    // if (undo) {
-    // data = await this.animateBlock(
-    //   to,
-    //   from,
-    //   piece,
-    //   movingPiece.getCharacter()
-    // );
-    // this.getBlock(command.getFrom()).setText(movingPiece.getCharacter());
-    //   if (takingPiece) {
-    // await this.getBlock(command.getTo()).fadeInText(
-    //   takingPiece.getCharacter()
-    //     );
-    //   } else {
-    //     this.getBlock(command.getTo()).setText(" ");
-    //   }
-    // } else {
-    // data = await this.animateBlock(
-    //   from,
-    //   to,
-    //   piece,
-    //   movingPiece.getCharacter()
-    // );
-    // this.getBlock(command.getTo()).setText(movingPiece.getCharacter());
-    // }
 
     return data;
   }

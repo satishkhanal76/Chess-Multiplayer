@@ -82,7 +82,7 @@ export class Game {
   }
 
   setupBoard() {
-    let fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    let fenString = "rnbqkbnr/pPpppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
     let lines = fenString.split("/");
 
     for (let i = 0; i < lines.length; i++) {
