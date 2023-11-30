@@ -14,7 +14,7 @@ export default class TwoQueenVariant extends ClassicalVariant {
     this.setBoardSet(
       new CustomSet(
         this.getBoard(),
-        "rnbqkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKQBNR"
+        "rnbqkqbnr/ppppppppp/8/8/8/8/PPPPPPPPP/RNBQKQBNR"
       )
     );
   }

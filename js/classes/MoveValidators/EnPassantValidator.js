@@ -1,3 +1,4 @@
+import FileRankFactory from "../FileRankFactory.js";
 import { Command } from "../commands/Command.js";
 import { Piece } from "../pieces/Piece.js";
 import ParentMoveValidator from "./ParentMoveValidator.js";
@@ -59,17 +60,26 @@ export default class EnPassantValidator extends ParentMoveValidator {
       )
     )
       return moves;
-
+    let move;
     if (piece.getColour() === Piece.COLOUR.WHITE) {
-      moves.push({
+      move = {
         col: previousMovingPieceFileRank.getCol(),
         row: previousMovingPieceFileRank.getRow() - 1,
-      });
+      };
     } else {
-      moves.push({
+      move = {
         col: previousMovingPieceFileRank.getCol(),
         row: previousMovingPieceFileRank.getRow() + 1,
-      });
+      };
+    }
+    // if this move puts king in check, En Passant not possible
+    if (
+      !this.getBoard().willMovePutKingInCheck(
+        thisPiecePosition,
+        FileRankFactory.getFileRank(move.col, move.row)
+      )
+    ) {
+      moves.push(move);
     }
 
     return moves;
