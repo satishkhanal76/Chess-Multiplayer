@@ -6,6 +6,7 @@ import GameValidator from "./validators/GameValidator.js";
 import CheckmateValidator from "./validators/CheckmateValidator.js";
 import StalemateValidator from "./validators/StalemateValidator.js";
 import FileRankFactory from "./FileRankFactory.js";
+import ClassicalSet from "./board-sets/ClassicalSet.js";
 
 export class Game {
   #board;
@@ -82,21 +83,8 @@ export class Game {
   }
 
   setupBoard() {
-    let fenString = "rnbqkbnr/pPpppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-    let lines = fenString.split("/");
-
-    for (let i = 0; i < lines.length; i++) {
-      let piece, character;
-      let line = lines[i];
-
-      if (line.length == 1) continue;
-
-      for (let j = 0; j < line.length; j++) {
-        character = line.charAt(j);
-        piece = PieceFactory.getPieceFen(character);
-        this.#board.placePiece(piece, FileRankFactory.getFileRank(j, i));
-      }
-    }
+    const classicalSet = new ClassicalSet(this.#board);
+    classicalSet.populateBoard();
   }
 
   getPlayer(colour) {
