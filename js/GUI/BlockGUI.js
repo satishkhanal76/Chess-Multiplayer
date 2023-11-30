@@ -84,6 +84,30 @@ export class BlockGUI {
     });
   }
 
+  async fadeOutText() {
+    return new Promise((resolve, reject) => {
+      const text = this.getText();
+      this.setText(" ");
+
+      const fadeOutElement = document.createElement("span");
+
+      fadeOutElement.classList.add("fade-in-element");
+
+      fadeOutElement.textContent = text;
+
+      this.#element.append(fadeOutElement);
+
+      fadeOutElement.style.animation = `zoom-out ${
+        this.#textFadeInTime
+      }ms cubic-bezier( 0.215, 0.61, 0.355, 1 )`;
+
+      setTimeout(() => {
+        fadeOutElement.remove();
+        resolve("ANIMATION DONE");
+      }, this.#textFadeInTime);
+    });
+  }
+
   getElement() {
     return this.#element;
   }

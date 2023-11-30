@@ -34,6 +34,8 @@ export class Player {
    * Moves the piece on the board
    */
   movePiece(piece, toFileRank) {
+    if (!piece || !toFileRank)
+      throw new Error("Piece or destination file rank missing.");
     //if not our piece then return
     if (piece.getColour() !== this.getColour()) return false;
 

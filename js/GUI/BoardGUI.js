@@ -7,7 +7,7 @@ export class BoardGUI {
   #game;
   #board;
 
-  #blocks = [];
+  #blocks;
 
   #element;
 
@@ -15,7 +15,7 @@ export class BoardGUI {
 
   #modal;
 
-  #animationTime = 200;
+  #animationTime = 250;
 
   #promise;
 
@@ -27,7 +27,10 @@ export class BoardGUI {
 
     this.#modal = modal;
 
-    this.#element = document.getElementById("board");
+    this.#element = document.createElement("div");
+    this.#element.classList.add("board");
+    this.#element.id = "board";
+    document.getElementById("board-container").appendChild(this.#element);
 
     this.#commandsDisabled = false;
 
@@ -35,6 +38,10 @@ export class BoardGUI {
     this.updateBoard();
 
     this.setupButtons();
+  }
+
+  removeBoard() {
+    this.#element.remove();
   }
 
   setupButtons() {
@@ -95,7 +102,16 @@ export class BoardGUI {
         case "Enter":
           current.click();
           break;
+        case "2":
+          this.#game.changeVariant(new TwoQueenVariant(this.#game));
+          this.#board = this.#game.getBoard();
+          this.#createBlocks();
+          this.updateBoard();
+
+          this.setupButtons();
+          break;
         default:
+          this.showBoardOnConsole();
           break;
       }
     });
@@ -140,11 +156,12 @@ export class BoardGUI {
   }
 
   getBlock(fileRank) {
-    return this.#blocks.find(
-      (block) =>
-        block.getFileRank().getCol() === fileRank.getCol() &&
-        block.getFileRank().getRow() === fileRank.getRow()
-    );
+    return this.#blocks[fileRank.getRow()][fileRank.getCol()];
+    // return this.#blocks.find(
+    //   (block) =>
+    //     block.getFileRank().getCol() === fileRank.getCol() &&
+    //     block.getFileRank().getRow() === fileRank.getRow()
+    // );
   }
 
   async clicked(block) {
@@ -173,6 +190,7 @@ export class BoardGUI {
       }
 
       if (
+        fromPiece?.getColour() === toPiece?.getColour() &&
         fromPiece?.getType() === Piece.TYPE.KING &&
         toPiece?.getType() === Piece.TYPE.ROOK
       ) {
@@ -209,11 +227,15 @@ export class BoardGUI {
         if (this.#commandsDisabled) return null;
         this.#commandsDisabled = true;
 
-        this.#promise = currentPlayer.movePiece(
-          this.#board.getPiece(this.#clickedPiece.getFileRank()),
-          block.getFileRank()
-        );
-        element = await this.animateCommand(this.#promise);
+        try {
+          this.#promise = currentPlayer.movePiece(
+            this.#board.getPiece(this.#clickedPiece.getFileRank()),
+            block.getFileRank()
+          );
+          element = await this.animateCommand(this.#promise);
+        } catch (error) {
+          console.log(error);
+        }
 
         this.#commandsDisabled = false;
       }
@@ -328,7 +350,8 @@ export class BoardGUI {
       );
 
       if (command.getType() === Command.TYPES.EN_PASSANT_COMMAND) {
-        this.getBlock(command.getTakingPiecePosition()).setText(" ");
+        this.getBlock(command.getTakingPiecePosition()).fadeOutText();
+        // this.getBlock(command.getTakingPiecePosition()).setText(" ");
       }
       this.getBlock(command.getTo()).setText(movingPiece.getCharacter());
       if (command.getType() === Command.TYPES.PROMOTION_COMMAND) {
@@ -455,12 +478,10 @@ export class BoardGUI {
 
   showValidMoves(validMoves) {
     validMoves.forEach((move) => {
-      let block = this.#blocks.filter(
-        (block) =>
-          move.col == block.getFileRank().getCol() &&
-          move.row == block.getFileRank().getRow()
+      const block = this.getBlock(
+        FileRankFactory.getFileRank(move.col, move.row)
       );
-      block[0].showAsValidBlock();
+      block.showAsValidBlock();
     });
   }
 
@@ -475,42 +496,55 @@ export class BoardGUI {
     }
   }
 
+  #createBlockGrid(col, row) {
+    this.#blocks = new Array(row);
+    for (let i = 0; i < this.#blocks.length; i++) {
+      this.#blocks[i] = new Array(col);
+    }
+  }
+
   #createBlocks() {
     const columnLength = this.#board.getColumn();
     const rowLength = this.#board.getRow();
+    this.#createBlockGrid(columnLength, rowLength);
     let piece;
 
     let block;
-    let lastColour = Piece.COLOUR.WHITE;
+    let rankStartingColour = Piece.COLOUR.WHITE;
+    let blockColour;
 
-    for (let i = 0; i < columnLength; i++) {
+    for (let i = 0; i < this.#blocks.length; i++) {
+      blockColour = rankStartingColour;
+
       // this.#element.append((document.createElement("span").textContent = i));
-      for (let j = 0; j < rowLength; j++) {
-        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
+      for (let j = 0; j < this.#blocks[i].length; j++) {
+        // console.log(FileRankFactory.getFileRank(j, i));
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(j, i));
 
         const fileRank = FileRankFactory.getFileRank(j, i);
 
-        block = this.createBlock(fileRank, lastColour);
+        block = this.createBlock(fileRank, blockColour);
         this.#element.append(block.getElement());
 
-        this.#blocks.push(block);
+        this.#blocks[i][j] = block;
+        // this.#blocks.push(block);
 
         block.setText(piece ? piece.getCharacter() : " ");
 
-        lastColour =
-          lastColour === Piece.COLOUR.WHITE
+        blockColour =
+          blockColour === Piece.COLOUR.WHITE
             ? Piece.COLOUR.BLACK
             : Piece.COLOUR.WHITE;
       }
-      lastColour =
-        lastColour === Piece.COLOUR.WHITE
+      rankStartingColour =
+        rankStartingColour === Piece.COLOUR.WHITE
           ? Piece.COLOUR.BLACK
           : Piece.COLOUR.WHITE;
     }
   }
 
   animateBlock(from, to, block, text) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let newBlock;
 
       newBlock = new BlockGUI(
@@ -538,7 +572,12 @@ export class BoardGUI {
       element.style.setProperty("--to-row", offsetTo.row + "px");
 
       this.removeValidSoptsMark();
+
+      // block.fadeOutText();
+
       block.setText(" ");
+      // this.updateCheckStyling()
+      block.removeCheckStyle();
 
       element.style.animation = `animate-move ${
         this.#animationTime
@@ -565,23 +604,18 @@ export class BoardGUI {
   }
 
   updateBoard() {
-    const columnLength = this.#board.getColumn();
-    const rowLenghth = this.#board.getRow();
+    this.#element.style.setProperty(
+      "--num-of-columns",
+      this.#board.getColumn()
+    );
     let piece;
 
     let block;
 
-    for (let i = 0; i < columnLength; i++) {
-      for (let j = 0; j < rowLenghth; j++) {
-        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
-
-        block = this.#blocks
-          .filter(
-            (block) =>
-              block.getFileRank().getCol() == i &&
-              block.getFileRank().getRow() == j
-          )
-          .pop();
+    for (let i = 0; i < this.#blocks.length; i++) {
+      for (let j = 0; j < this.#blocks[i].length; j++) {
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(j, i));
+        block = this.#blocks[i][j];
 
         block.setText(piece ? piece.getCharacter() : " ");
         block.hideAsValidBlock();
@@ -612,23 +646,14 @@ export class BoardGUI {
   }
 
   removeValidSoptsMark() {
-    const columnLength = this.#board.getColumn();
-    const rowLenghth = this.#board.getRow();
     let piece;
 
-    let block;
+    for (let i = 0; i < this.#blocks.length; i++) {
+      for (let j = 0; j < this.#blocks[i].length; j++) {
+        piece = this.#board.getPiece(FileRankFactory.getFileRank(j, i));
 
-    for (let i = 0; i < columnLength; i++) {
-      for (let j = 0; j < rowLenghth; j++) {
-        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
-
-        block = this.#blocks.filter(
-          (block) =>
-            block.getFileRank().getCol() == i &&
-            block.getFileRank().getRow() == j
-        );
-
-        block[0].hideAsValidBlock();
+        const block = this.getBlock(FileRankFactory.getFileRank(j, i));
+        block.hideAsValidBlock();
       }
     }
   }
@@ -636,12 +661,15 @@ export class BoardGUI {
   showBoardOnConsole() {
     const columnLength = this.#board.getColumn();
     const rowLenghth = this.#board.getRow();
+    console.log(this.#board);
 
     let piece;
     let output = "";
-    for (let i = 0; i < columnLength; i++) {
-      for (let j = 0; j < rowLenghth; j++) {
-        piece = this.#board.getPiece(FileRankFactory.getFileRank(i, j));
+    for (let i = 0; i < rowLenghth; i++) {
+      for (let j = 0; j < columnLength; j++) {
+        let fileRank = FileRankFactory.getFileRank(j, i);
+        if (!fileRank) continue;
+        piece = this.#board.getPiece(fileRank);
         output += piece ? piece.getCharacter() : " ";
       }
       output = output + "\n";

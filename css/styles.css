@@ -180,7 +180,8 @@ main {
 }
 
 .block.incheck {
-  background-color: rgb(241, 91, 91);
+  color: red;
+  /* background-color: rgb(241, 91, 91); */
 }
 
 @media only screen and (max-width: 600px) {
@@ -204,14 +205,28 @@ main {
 }
 
 @keyframes animate-move {
-  from {
+  0% {
     top: var(--from-row);
     left: var(--from-col);
+    transform: scale(1);
   }
 
-  to {
+  20% {
+    top: var(--from-row);
+    left: var(--from-col);
+    transform: scale(1.5);
+  }
+
+  80% {
     top: var(--to-row);
     left: var(--to-col);
+    transform: scale(1.5);
+  }
+
+  100% {
+    top: var(--to-row);
+    left: var(--to-col);
+    transform: scale(1);
   }
 }
 
@@ -221,5 +236,14 @@ main {
   }
   to {
     transform: scale(1);
+  }
+}
+
+@keyframes zoom-out {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(0);
   }
 }

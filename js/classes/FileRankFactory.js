@@ -1,9 +1,7 @@
+import { Board } from "./Board.js";
 import FileRank from "./FileRank.js";
 
 export default class FileRankFactory {
-  static #NUM_OF_COLUMNS = 8;
-  static #NUM_OF_ROWS = 8;
-
   static #fileRankFactoryInstance;
 
   #colLength;
@@ -12,8 +10,8 @@ export default class FileRankFactory {
   #fileRanks;
 
   constructor() {
-    this.#colLength = FileRankFactory.NUM_OF_COLUMNS;
-    this.#rowLength = FileRankFactory.NUM_OF_ROWS;
+    this.#colLength = Board.NUM_OF_COLUMNS;
+    this.#rowLength = Board.NUM_OF_ROWS;
 
     this.#fileRanks = [];
 
@@ -28,14 +26,6 @@ export default class FileRankFactory {
         (fileRank) => fileRank.getCol() === col && fileRank.getRow() === row
       );
     }
-  }
-
-  static get NUM_OF_COLUMNS() {
-    return FileRankFactory.#NUM_OF_COLUMNS;
-  }
-
-  static get NUM_OF_ROWS() {
-    return FileRankFactory.#NUM_OF_ROWS;
   }
 
   static getFileRank(col = 0, row = 0) {
@@ -57,6 +47,10 @@ export default class FileRankFactory {
         );
       }
     }
+  }
+
+  static resetFileRanks() {
+    FileRankFactory.#fileRankFactoryInstance = undefined;
   }
 
   static #convertRowToRank(row) {

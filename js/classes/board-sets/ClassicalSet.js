@@ -2,17 +2,18 @@ import FileRankFactory from "../FileRankFactory.js";
 import { PieceFactory } from "../pieces/PieceFactory.js";
 
 export default class ClassicalSet {
-  static #FEN_STRING = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+  #FEN_STRING = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
   #board;
   constructor(board) {
     this.#board = board;
   }
 
   populateBoard() {
-    const ranks = ClassicalSet.#FEN_STRING.split("/");
+    const ranks = this.#FEN_STRING.split("/");
 
     for (let i = 0; i < ranks.length; i++) {
       const rank = ranks[i];
+      if (i >= this.#board.getRow()) continue;
 
       let col = 0;
       for (let j = 0; j < rank.length; j++) {
@@ -34,5 +35,9 @@ export default class ClassicalSet {
         }
       }
     }
+  }
+
+  setFenString(fenString) {
+    this.#FEN_STRING = fenString;
   }
 }

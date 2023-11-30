@@ -6,6 +6,9 @@ import { CommandHandler } from "./commands/CommandHandler.js";
 import { Piece } from "./pieces/Piece.js";
 
 export class Board {
+  static #NUM_OF_COLUMNS = 8;
+  static #NUM_OF_ROWS = 8;
+
   #col;
   #row;
 
@@ -18,17 +21,27 @@ export class Board {
   #moveValidator;
 
   constructor(col, row) {
-    this.#col = col || 8;
-    this.#row = row || 8;
-
-    this.#createBoard();
+    this.#createBoard(col, row);
 
     this.#commandHandler = new CommandHandler();
     this.#moveEventListener = new Listeners();
     this.#moveValidator = new MoveValidator(this);
   }
 
-  #createBoard() {
+  #createBoard(col, row) {
+    if (col) {
+      this.#col = col;
+      Board.#NUM_OF_COLUMNS = col;
+    } else {
+      this.#col = Board.#NUM_OF_ROWS;
+    }
+    if (row) {
+      this.#row = row;
+      Board.#NUM_OF_ROWS = row;
+    } else {
+      this.#row = Board.#NUM_OF_ROWS;
+    }
+
     this.#grid = new Array(this.#col);
     for (let i = 0; i < this.#grid.length; i++) {
       this.#grid[i] = new Array(this.#row);
@@ -127,10 +140,6 @@ export class Board {
     this.placePiece(piece, to);
 
     return takingPiece;
-  }
-
-  move(from, to) {
-    const piece = this.getPiece(at);
   }
 
   /**
@@ -435,5 +444,20 @@ export class Board {
 
   getMoveEventListener() {
     return this.#moveEventListener;
+  }
+
+  static get NUM_OF_COLUMNS() {
+    return Board.#NUM_OF_COLUMNS;
+  }
+
+  static get NUM_OF_ROWS() {
+    return Board.#NUM_OF_ROWS;
+  }
+
+  static set NUM_OF_COLUMNS(colLength) {
+    Board.#NUM_OF_COLUMNS = colLength;
+  }
+  static set NUM_OF_ROWS(rowLength) {
+    Board.#NUM_OF_ROWS = rowLength;
   }
 }

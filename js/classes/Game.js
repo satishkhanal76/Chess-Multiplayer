@@ -1,14 +1,17 @@
 import { Board } from "./Board.js";
 import { Piece } from "./pieces/Piece.js";
 import { Player } from "./players/Player.js";
-import { PieceFactory } from "./pieces/PieceFactory.js";
 import GameValidator from "./validators/GameValidator.js";
 import CheckmateValidator from "./validators/CheckmateValidator.js";
 import StalemateValidator from "./validators/StalemateValidator.js";
-import FileRankFactory from "./FileRankFactory.js";
 import ClassicalSet from "./board-sets/ClassicalSet.js";
+import ClassicalVariant from "./variants/ClassicalVariant.js";
+import TwoQueenVariant from "./variants/TwoQueenVariant.js";
+import FileRankFactory from "./FileRankFactory.js";
 
 export class Game {
+  #variant;
+
   #board;
 
   #players = [];
@@ -21,7 +24,9 @@ export class Game {
 
   #validators = [];
 
-  constructor() {
+  constructor(variant) {
+    this.#variant = variant || new ClassicalVariant();
+
     this.createBoard();
 
     this.createPlayers();
@@ -75,16 +80,7 @@ export class Game {
   }
 
   createBoard() {
-    this.#board = new Board(
-      FileRankFactory.NUM_OF_COLUMNS,
-      FileRankFactory.NUM_OF_ROWS
-    );
-    this.setupBoard();
-  }
-
-  setupBoard() {
-    const classicalSet = new ClassicalSet(this.#board);
-    classicalSet.populateBoard();
+    return (this.#board = this.#variant.getPopulatedBoard());
   }
 
   getPlayer(colour) {
