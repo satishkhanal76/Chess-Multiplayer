@@ -67,7 +67,7 @@ main {
 }
 
 .board.flipped {
-  transform: rotateZ(180deg);
+  transform: rotateX(180deg);
 }
 
 .board.flipped .block {
