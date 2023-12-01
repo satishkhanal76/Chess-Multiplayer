@@ -173,4 +173,8 @@ export class CommandHandler {
   emitCommand() {
     this.getCurrentCommand()?.emit();
   }
+
+  getAllCommands() {
+    return this.#commands;
+  }
 }

@@ -30,9 +30,16 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const socketIndex = players.findIndex((player) => player === socket.id);
     players.splice(socket, 1);
-    console.log(players);
 
-    rooms.forEach((room) => room.removePlayer(socket));
+    rooms.forEach((room) => {
+      room.removePlayer(socket);
+      if (room.getPlayerSockets().length < 1) {
+        const roomIndex = rooms.findIndex((r) => r.getId() === room.getId());
+        if (roomIndex >= 0) {
+          rooms.splice(roomIndex, 1);
+        }
+      }
+    });
   });
 
   socket.on("join-room", (payload) => {
@@ -47,21 +54,18 @@ io.on("connection", (socket) => {
     if (gameRoomIndex < 0) {
       responsePayload.newRoom = true;
       gameRoom = new GameRoom(roomId);
-      gameRoom.addPlayerSocket(socket);
       rooms.push(gameRoom);
     } else {
       responsePayload.newRoom = false;
+
       gameRoom = rooms[gameRoomIndex];
-      if (gameRoom.getPlayerSockets().length > 2)
-        return socket.emit("error", {
-          msg: "Already two players in the room.",
-        });
-      gameRoom.addPlayerSocket(socket);
     }
+    gameRoom.addPlayerSocket(socket);
 
     socket.emit("join-success", responsePayload);
     //if this is the second player make the player play black
-    if (gameRoom.getPlayerSockets().length >= 2) {
+    if (gameRoom.getPlayerSockets().length === 2) {
+      console.log("SECOND PLAYER");
       const blackPlayer = gameRoom
         .getGame()
         .getPlayers()
@@ -71,7 +75,13 @@ io.on("connection", (socket) => {
         variant: "CLASSICAL",
         color: Piece.COLOUR.BLACK,
       });
+    } else if (gameRoom.getPlayerSockets().length > 2) {
+      socket.emit("spectateGame", {
+        variant: "CLASSICAL",
+      });
     }
+
+    gameRoom.emitAllMoves(socket);
   });
 
   socket.on("createGame", (payload) => {
@@ -79,7 +89,6 @@ io.on("connection", (socket) => {
     const socketId = payload.socketId;
 
     const gameRoom = rooms.find((room) => room.getId() === gameRoomId);
-    console.log(gameRoomId, rooms);
     if (!gameRoom) return socket.emit("error", { msg: "NO ROOM FOUND" });
 
     if (!gameRoom.getPlayerSockets().find((s) => s.id === socketId))

@@ -56,12 +56,32 @@ export class BoardGUI {
 
   addSocketListeners() {
     this.#socket.on("pieceMove", async ({ from, to }) => {
+      await this.executeAllCommands();
       const fromFileRank = FileRankFactory.getFileRank(from.col, from.row);
       const toFileRank = FileRankFactory.getFileRank(to.col, to.row);
       const element = await this.movePiece(fromFileRank, toFileRank);
       this.removeElement(element);
       this.updateButtons();
       this.displayModalIfOver();
+    });
+
+    this.#socket.on("previousMoves", async (moves) => {
+      let move;
+      while (moves.length >= 1) {
+        move = moves.shift();
+        const fromFileRank = FileRankFactory.getFileRank(
+          move.from.col,
+          move.from.row
+        );
+        const toFileRank = FileRankFactory.getFileRank(
+          move.to.col,
+          move.to.row
+        );
+        const element = await this.movePiece(fromFileRank, toFileRank);
+        this.removeElement(element);
+        this.updateButtons();
+        this.displayModalIfOver();
+      }
     });
   }
 

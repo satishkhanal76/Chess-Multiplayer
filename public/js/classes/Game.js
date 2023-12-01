@@ -39,16 +39,6 @@ export class Game {
     this.#board.getMoveEventListener().addListener((event) => {
       this.changeTurn();
       this.validateGame();
-
-      const command = event.command;
-
-      try {
-        console.log(
-          command.getFrom().toString(),
-          "->",
-          command.getTo().toString()
-        );
-      } catch (err) {}
     });
   }
 

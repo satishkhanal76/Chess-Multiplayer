@@ -5,7 +5,7 @@ import { io } from "https://cdn.socket.io/4.7.2/socket.io.esm.min.js";
 import { BoardGUI } from "./GUI/BoardGUI.js";
 import { Piece } from "./classes/pieces/Piece.js";
 
-const socket = io("http://localhost:3000/");
+const socket = io("/");
 
 let socketId;
 let roomId;
@@ -59,4 +59,14 @@ socket.on("game-creation-success", (payload) => {
   if (color === Piece.COLOUR.BLACK) {
     boardGUI.flipBoard();
   }
+});
+
+socket.on("spectateGame", (payload) => {
+  game = new Game(new ClassicalVariant());
+  boardGUI = new BoardGUI(game, socket, modal, null, {
+    roomId,
+    socketId,
+  });
+  alert("SPECTATING GAME");
+  roomIdForm.remove();
 });
