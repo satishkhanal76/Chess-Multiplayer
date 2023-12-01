@@ -63,9 +63,19 @@ main {
   grid-template-columns: repeat(var(--num-of-columns), auto);
 
   border: 2px solid black;
+  transition: transform 0.5s linear;
+}
+
+.board.flipped {
+  transform: rotateZ(180deg);
+}
+
+.board.flipped .block {
+  transform: rotateX(180deg);
 }
 
 .board .block {
+  --rotation: 0deg;
   position: relative;
   display: flex;
 
@@ -169,7 +179,7 @@ main {
   color: white;
 }
 
-.animation-block {
+/* .animation-block {
   --from-col: 0px;
   --from-row: 0;
 
@@ -177,11 +187,15 @@ main {
   --to-row: 100px;
 
   animation: animate-move 2s forwards;
-}
+} */
 
 .block.incheck {
   color: red;
   /* background-color: rgb(241, 91, 91); */
+}
+
+.block.flipped {
+  --rotation: 180deg;
 }
 
 @media only screen and (max-width: 600px) {
@@ -208,25 +222,25 @@ main {
   0% {
     top: var(--from-row);
     left: var(--from-col);
-    transform: scale(1);
+    transform: rotate(var(--rotation)) scale(1);
   }
 
   20% {
     top: var(--from-row);
     left: var(--from-col);
-    transform: scale(1.5);
+    transform: rotate(var(--rotation)) scale(1.5);
   }
 
   80% {
     top: var(--to-row);
     left: var(--to-col);
-    transform: scale(1.5);
+    transform: rotate(var(--rotation)) scale(1.5);
   }
 
   100% {
     top: var(--to-row);
     left: var(--to-col);
-    transform: scale(1);
+    transform: rotate(var(--rotation)) scale(1);
   }
 }
 

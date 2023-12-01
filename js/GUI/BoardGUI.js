@@ -21,7 +21,10 @@ export class BoardGUI {
 
   #commandsDisabled;
 
+  #flipped;
+
   constructor(game, modal) {
+    this.#flipped = false;
     this.#game = game;
     this.#board = game.getBoard();
 
@@ -38,6 +41,15 @@ export class BoardGUI {
     this.updateBoard();
 
     this.setupButtons();
+  }
+
+  flipBoard() {
+    this.#flipped = !this.#flipped;
+    if (this.#flipped) {
+      this.#element.classList.add("flipped");
+    } else {
+      this.#element.classList.remove("flipped");
+    }
   }
 
   removeBoard() {
@@ -110,8 +122,10 @@ export class BoardGUI {
 
           this.setupButtons();
           break;
+        case "f":
+          this.flipBoard();
+          break;
         default:
-          this.showBoardOnConsole();
           break;
       }
     });
@@ -151,6 +165,7 @@ export class BoardGUI {
     }
 
     this.updateCheckStyling();
+    this.flipBoard();
 
     return data;
   }
@@ -340,6 +355,7 @@ export class BoardGUI {
         );
         this.getBlock(command.getFrom()).setText(movingPiece.getCharacter());
         this.getBlock(command.getTo()).setText(" ");
+        // this.getBlock(command.getTo()).fadeOutText();
       }
     } else {
       data = await this.animateBlock(
@@ -556,7 +572,12 @@ export class BoardGUI {
       const element = newBlock.getElement();
       element.style.position = "absolute";
 
+      if (this.isFlipped()) {
+        element.classList.add("flipped");
+      }
+
       this.#element.append(element);
+
       const offsetFrom = {
         col: from.col * element.offsetWidth,
         row: from.row * element.offsetHeight,
@@ -576,6 +597,7 @@ export class BoardGUI {
       // block.fadeOutText();
 
       block.setText(" ");
+      // block.fadeOutText();
       // this.updateCheckStyling()
       block.removeCheckStyle();
 
@@ -601,6 +623,10 @@ export class BoardGUI {
 
   createBlock(fileRank, lastColour) {
     return new BlockGUI(fileRank, this, lastColour);
+  }
+
+  isFlipped() {
+    return this.#flipped;
   }
 
   updateBoard() {
