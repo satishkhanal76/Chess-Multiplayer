@@ -23,8 +23,17 @@ export class BoardGUI {
 
   #flipped;
 
-  constructor(game, modal) {
+  #socket;
+
+  #socketInfo;
+  #color;
+  constructor(game, socket, modal, color, socketInfo) {
+    this.#socketInfo = socketInfo;
+    this.#color = color;
+    this.#socket = socket;
+
     this.#flipped = false;
+
     this.#game = game;
     this.#board = game.getBoard();
 
@@ -41,6 +50,19 @@ export class BoardGUI {
     this.updateBoard();
 
     this.setupButtons();
+
+    this.addSocketListeners();
+  }
+
+  addSocketListeners() {
+    this.#socket.on("pieceMove", async ({ from, to }) => {
+      const fromFileRank = FileRankFactory.getFileRank(from.col, from.row);
+      const toFileRank = FileRankFactory.getFileRank(to.col, to.row);
+      const element = await this.movePiece(fromFileRank, toFileRank);
+      this.removeElement(element);
+      this.updateButtons();
+      this.displayModalIfOver();
+    });
   }
 
   flipBoard() {
@@ -171,89 +193,97 @@ export class BoardGUI {
 
   getBlock(fileRank) {
     return this.#blocks[fileRank.getRow()][fileRank.getCol()];
-    // return this.#blocks.find(
-    //   (block) =>
-    //     block.getFileRank().getCol() === fileRank.getCol() &&
-    //     block.getFileRank().getRow() === fileRank.getRow()
-    // );
+  }
+
+  async movePiece(from, to) {
+    const currentPlayer = this.#game.getCurrentPlayer();
+
+    let element;
+
+    let fromPiece = this.#board.getPiece(from);
+    let toPiece = this.#board.getPiece(to);
+
+    if (
+      this.#board.getCommandHandler().getCurrentCommandIndex() <
+      this.#board.getCommandHandler().getCommandIndex()
+    ) {
+      await this.executeAllCommands();
+    }
+
+    if (
+      fromPiece?.getColour() === toPiece?.getColour() &&
+      fromPiece?.getType() === Piece.TYPE.KING &&
+      toPiece?.getType() === Piece.TYPE.ROOK
+    ) {
+      //disable the commands for the animation
+      if (this.#commandsDisabled) return null;
+      this.#commandsDisabled = true;
+
+      this.#promise = currentPlayer.castle(from, to);
+
+      element = await this.animateCommand(this.#promise);
+
+      //reenable the commands for the animation
+      this.#commandsDisabled = false;
+    } else if (
+      fromPiece.getType() === Piece.TYPE.PAWN &&
+      fromPiece.getPromotionRow() === to.getRow()
+    ) {
+      //disable the commands for the animation
+      if (this.#commandsDisabled) return null;
+      this.#commandsDisabled = true;
+
+      this.#promise = currentPlayer.promotePiece(
+        this.#board.getPiece(from),
+        to,
+        Piece.TYPE.QUEEN
+      );
+      element = await this.animateCommand(this.#promise);
+      this.#commandsDisabled = false;
+    } else {
+      //disable the commands for the animation
+      if (this.#commandsDisabled) return null;
+      this.#commandsDisabled = true;
+
+      try {
+        this.#promise = currentPlayer.movePiece(this.#board.getPiece(from), to);
+
+        element = await this.animateCommand(this.#promise);
+      } catch (error) {
+        console.log(error);
+      }
+
+      this.#commandsDisabled = false;
+    }
+    return element;
   }
 
   async clicked(block) {
+    if (this.#game.getCurrentPlayer().getColour() !== this.#color) {
+      return null;
+    }
     let element;
-    const currentPlayer = this.#game.getCurrentPlayer();
 
     let piece = this.#board.getPiece(block.getFileRank());
 
     if (this.#clickedPiece) {
-      let fromPiece = this.#board.getPiece(this.#clickedPiece.getFileRank());
-      let toPiece = this.#board.getPiece(block.getFileRank());
-
-      let from = {
-        col: this.#clickedPiece.getFileRank().getCol(),
-        row: this.#clickedPiece.getFileRank().getRow(),
-      };
-      let to = {
-        col: block.getFileRank().getCol(),
-        row: block.getFileRank().getRow(),
-      };
-      if (
-        this.#board.getCommandHandler().getCurrentCommandIndex() <
-        this.#board.getCommandHandler().getCommandIndex()
-      ) {
-        await this.executeAllCommands();
+      let from = this.#clickedPiece.getFileRank();
+      let to = block.getFileRank();
+      element = await this.movePiece(from, to);
+      if (element) {
+        this.#socket.emit("pieceMove", {
+          roomId: this.#socketInfo.roomId,
+          socketId: this.#socketInfo.socketId,
+          from: {
+            col: from.getCol(),
+            row: from.getRow(),
+          },
+          to: {
+            col: to.getCol(),
+            row: to.getRow(),
+          },
+        });
       }
-
-      if (
-        fromPiece?.getColour() === toPiece?.getColour() &&
-        fromPiece?.getType() === Piece.TYPE.KING &&
-        toPiece?.getType() === Piece.TYPE.ROOK
-      ) {
-        //disable the commands for the animation
-        if (this.#commandsDisabled) return null;
-        this.#commandsDisabled = true;
-
-        this.#promise = currentPlayer.castle(
-          this.#clickedPiece.getFileRank(),
-          block.getFileRank()
-        );
-
-        element = await this.animateCommand(this.#promise);
-
-        //reenable the commands for the animation
-        this.#commandsDisabled = false;
-      } else if (
-        fromPiece.getType() === Piece.TYPE.PAWN &&
-        fromPiece.getPromotionRow() === block.getFileRank().getRow()
-      ) {
-        //disable the commands for the animation
-        if (this.#commandsDisabled) return null;
-        this.#commandsDisabled = true;
-
-        this.#promise = currentPlayer.promotePiece(
-          this.#board.getPiece(this.#clickedPiece.getFileRank()),
-          block.getFileRank(),
-          Piece.TYPE.QUEEN
-        );
-        element = await this.animateCommand(this.#promise);
-        this.#commandsDisabled = false;
-      } else {
-        //disable the commands for the animation
-        if (this.#commandsDisabled) return null;
-        this.#commandsDisabled = true;
-
-        try {
-          this.#promise = currentPlayer.movePiece(
-            this.#board.getPiece(this.#clickedPiece.getFileRank()),
-            block.getFileRank()
-          );
-          element = await this.animateCommand(this.#promise);
-        } catch (error) {
-          console.log(error);
-        }
-
-        this.#commandsDisabled = false;
-      }
-
       this.removeElement(element);
       this.removeValidSoptsMark();
 
