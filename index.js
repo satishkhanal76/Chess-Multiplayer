@@ -112,11 +112,11 @@ io.on("connection", (socket) => {
   socket.on("pieceMove", (payload) => {
     const gameRoom = rooms.find((room) => room.getId() === payload.roomId);
     if (!gameRoom) return socket.emit("error", { msg: "NO ROOM FOUND" });
-    const socket = gameRoom
+    const playerSocket = gameRoom
       .getPlayerSockets()
       .find((s) => s.id === payload.socketId);
-    if (!socket)
-      return socket.emit("error", {
+    if (!playerSocket)
+      return playerSocket.emit("error", {
         msg: "This socket was not found in that game room.",
       });
 

@@ -46,6 +46,7 @@ socket.on("join-success", (payload) => {
 });
 
 socket.on("error", (payload) => {
+  alert(JSON.stringify(payload));
   console.log(payload);
 });
 
